@@ -18,12 +18,22 @@
     #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:65vh; background:#000; border:3px solid #444; border-bottom:14px solid #555; image-rendering:pixelated; }
     #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
     #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
-    #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; }
+    
+    #controller { 
+      height: 26vh; 
+      margin-top: -35px;
+      background:#0a0a0a; 
+      border-top:4px solid #333; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+    }
+    
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
-      gap:-5px;                           /* ← changed to 9px as requested */
+      gap:9px; 
       width:clamp(340px,75vw,440px); 
       height:clamp(340px,75vw,440px); 
       place-items:center; 
@@ -31,109 +41,202 @@
     .btn { width:clamp(110px,24vw,150px); height:clamp(110px,24vw,150px); background:#3a3a3a; border:6px solid #888; border-radius:50%; color:white; font-size:clamp(3rem,9vw,4.5rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
     .btn:active { background:#666; transform:scale(0.92); }
     #center { grid-area:2 / 2 / 3 / 3; }
-    #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; }
-    #score-board { animation:scoreflash 1.8s infinite alternate; }
-    @keyframes scoreflash { from { opacity:0.75; text-shadow:0 0 12px #0ff8; } to { opacity:1; text-shadow:0 0 24px #0ff; } }
-    #game-over h2 { color:#ff4444; text-shadow:0 0 30px #f00; }
-  </style>
-</head>
+    #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px0 #ff08ff8; z-index:; z-index:5; }
+    #score-board {5; }
+    #score-board { animation animation::scorescoreflashflash  1.8s infinite alternate;1.8s }
+    @ infinite alternate; }
+    @keyframeskeyframes score scoreflash { from { opacity:0 { from { opacity:0.75; text.-shadow:750 ; text-shadow0: 120 0 12px #0ff8; } to {px #0ff opacity8:1 to; text opacity-shadow::0 1; text 24-shadow:0 0px  #240px #ffff; } }
+    #game-over h;2 { color } }
+    #game:#-overff h4444;2 { color:#ff4444; text-shadow:0 text-shadow:0 0  0 30px #pxf #f00; }
+  </00; }
+  </stylestyle>
+>
+</head</>
 <body>
 
-<div id="menu" class="visible">
-  <h1>GridFlow</h1>
-  <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
-  <button id="start-game-btn">START GAME</button>
-  <button id="settings-btn">SETTINGS</button>
-  <button id="help-btn">HELP</button>
-  <button id="credits-btn">CREDITS</button>
+<divhead>
+<body>
+
+<div id="="menumenu"" class="visible class="visible">
+">
+  <h 1 <h1>Grid>FlowGridFlow</</h1h1>
+ >
+ <div style  ="<div stylemargin:="30marginpx: 300px 60 px0; 60 font-size; font-size:1.6:rem1 color.:#6rem; color:#777777;">;">byby  ꜱᴀꜱᴀᴍᴍᴍᴍɪɪᴇᴇ</</divdiv>
+>
+   <button<button id="="startstart-game-btn-btn">START GAME GAME</buttonbutton>
+>
+ <button  id="settings-btn"><button id="settings-btn">SETSETTINGS</button>
+  <button id id="="help-btnhelp-btn">">HELPHELP</button</button>
+>
+   <button  id="<buttoncredits id-btn="credits-btn">">CREDCITS</REDITSbutton</button>
   <div id="start-feedback"></div>
+  <div id="start>
 </div>
 
 <div id="difficulty">
-  <h2 style="font-size:clamp(3rem,14vw,5.5rem); color:#0ff; margin-bottom:50px;">LEVEL</h2>
-  <button id="easy-btn">EASY</button>
+  <h2 style-feedback"></="divfont>
+-size:clamp(</div>
+
+<div id="difficulty">
+  <h2 style="font-size:clamp(3rem,143vwrem,,5.14vw5rem); color:#,5.05ffrem;); color:#0 marginff-bottom;: margin50px-bottom;">:50pxLEVEL;"></LEVEL</hh22>
+  <button id="easy-btn">E>
+ASY </ button<button id="easy-btn">EASY</button>
   <button id="medium-btn">MEDIUM</button>
-  <button id="extreme-btn">EXTREME</button>
-</div>
+  <button id="medium-btn">MEDIUM</button>
+  <button id="extreme-btn">EXTREME>
+  <button id="extreme-btn</">EXTREbutton>
+ME</button>
+</div</div>
 
-<div id="game" class="hidden">
+<div id<div id="="gamegame"" class=" class="hidden">
+  <div id="">
   <div id="play-area">
-    <div id="hud">
-      <div>Score: <span id="score">0</span></div>
-      <div id="score-board">Level: <span id="level">1</span></div>
-    </div>
-    <div id="pause-btn">P</div>
-    <canvas id="canvas"></canvas>
-    <div id="next-preview"><canvas id="next-canvas" width="90" height="90"></canvas></div>
+    <div id="play-area">
+    <div id="Score:hud">
+      <div>Score:  <span<span id id="score">0</="scorespan">0</span></div>
+      <div id>
+="     score -board<divLevel: id="score-board">Level: <span id ="<span id="level">level">1</span></1</div>
+span   ></ </div>
+    </divdiv>
+    <div>
+    <div id id="pause-btn="pause-btn">">PP</divdiv>
+>
+    <canvas id="canvas    <canvas id="canvas"></canvas"></canvas>
+    <div id="next-preview"><canvas>
+    <div id="next-preview"><canvas id="next-canvas" width="90" height=" id="next-canvas" width="9090" height="90"></canvas></"></canvas></div>
   </div>
 
-  <div id="controller">
-    <div class="dpad">
-      <div></div><button class="btn" id="rotate-cw">↑</button><div></div>
-      <button class="btn" id="move-left">←</button><div></div><button class="btn" id="move-right">→</button>
-      <div></div><button class="btn" id="soft-drop">↓</button><div></div>
+  <divdiv>
+  </div>
+
+  <div id id="controller">
+    <div class="controller="d">
+    <divpad">
+ class     =" d<div></div><button class="">
+btn     " <div></div><button class="btn" id="rotate id="rotate-cw-cw">↑</button><div></div>
+      <button">↑</button><div></div>
+      <button class="btn" id="move-left">←</button><div></ class="div><buttonbtn class" id="btn="move" id-left">="←</button>move-right">→</button>
+      <div></div><button class="<div></div><button class="btn" id="move-right">→</button>
+      <div></div><button class="btnbtn""=" idsoft="-dropsoft-drop">↓</button><div></div>
     </div>
   </div>
+</div">↓</>
+
+><div></div<div>
+    </div>
+ id  </div>
 </div>
 
-<div id="pause-overlay" class="hidden">
-  <h2>PAUSED</h2>
-  <button id="resume-btn">RESUME</button>
+<div id="="pause-overlaypause"-overlay class="" class="hidden">
+  <h2hidden">
+  <h2>PAUSED</>PAhUSED2</h2>
+>
+    <button id="<button id="resume-btn">-btn">RESRESUME</button>
 </div>
 
-<div id="game-over" class="hidden">
-  <div style="font-size:clamp(8rem,40vw,12rem);">🧸</div>
-  <h2 style="margin:20px 0;">Such a loser...</h2>
-  <div style="font-size:2rem; color:#ff0;">Final Score: <span id="final-score">0</span></div>
-  <button id="restart-btn" style="margin-top:40px;">TRY AGAIN</button>
+<divUME</button>
 </div>
 
-<!-- Audio -->
-<audio id="bg-music" loop preload="auto"></audio>
-<audio id="move-sfx" preload="auto"><source src="https://assets.codepen.io/243235/move-click.mp3" type="audio/mpeg"></audio>
-<audio id="rotate-sfx" preload="auto"><source src="https://assets.codepen.io/243235/rotate-click.mp3" type="audio/mpeg"></audio>
-<audio id="drop-sfx" preload="auto"><source src="https://assets.codepen.io/243235/drop.mp3" type="audio/mpeg"></audio>
-<audio id="line-sfx" preload="auto"><source src="https://assets.codepen.io/243235/clear-line.mp3" type="audio/mpeg"></audio>
+<div id="game-over" class="hidden id">
+ =" <divgame-over" class="hidden">
+  <div style="font-size:clamp(8 style="remfont,-size40vw:clamp(8rem,40vw,,1212remrem);">);">🧸🧸</</divdiv>
+>
+   <h2 style=" style="marginmargin::20px20px 0 ;">0Such;">Such a loser...</ a loser...</hh2>
+2  >
+  <div style="font-size:2rem<div style="font-size:2rem; color:#ff; color:#ff00;">Final ScoreFinal Score::  <span id id="final-score">="final-score">0</0span></</divspan></div>
+  <button id="restart>
+  -btn"<button id=" stylerestart-btnmargin"-top style="margin-top:40pxIN</;">TRY AGAIN</buttonbutton>
+>
+</div<!--</div>
+
+<!-- Audio Audio -->
+ -->
+<audio<audio id id="="bg-musicbg-music" loop" loop preload=" preload="autoauto"></"></>
+audio>
+<audio id="move-sfx"<a preloadudio id="auto"><source src="https="move-sfx" preload="auto"><source src="https://://assets.codepenassets.codepen.io.io/243/235243235/move-click.mp3/move" type="audio-click.mp3" type/mpeg"></="audio/maudiopeg"></audio>
+<audio id="rotate-sfx>
+" preload="auto<audio id="rotate-sfx" preload="auto"><source src="https://assets.codepen.io/243">235<source/rotate src="https-click://assets.codepen.io/243235/rotate-click.mp.mp3" type="audio="audio/mpegaudio>
+<aaudio>
+<audio id="dropudio id="drop-s-sfx"fx" preload preload="auto"><source src="https://="auto"><source src="assetshttps.codepen.io/243235/drop://assets.codepen.io.mp3" type/243235/drop.mp3" type="="audio/maudiopeg/mpeg"></audio"></>
+audio>
+<audio id="lineudio id="line-sfx" preload-sfx" preload="auto"><source=" srcauto="">https<source:// srcassets=".codehttps://pen.io/243235assets.codepen.io/243235/c/clear-line.mplear-line.mp33" type="audio" type="audio/m/mpeg"></audio"></audio>
+
+>
 
 <script>
-// ────────────────────────────────────────────────
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const nextCtx = document.getElementById('next-canvas').getContext('2d');
+//<script>
+// ─ ────────────────────────────────────────────────
+const─
+const canvas canvas = document = document.getElement.getElementByByIdId('('canvascanvas');
+const ctx =');
+const ctx = canvas.getContext canvas.getContext('('22d');
+constconst nextCtx = next documentCtx = document.get.getElementElementByIdById('('nextnext-canvas-canvas').').getgetContext('2Context('2d');
 
-const bgMusic = document.getElementById('bg-music');
-const moveSfx = document.getElementById('move-sfx');
-const rotateSfx = document.getElementById('rotate-sfx');
-const dropSfx = document.getElementById('drop-sfx');
-const lineSfx = document.getElementById('line-sfx');
+const bgd');
 
-let BLOCK = 0;
-let board = Array(20).fill().map(() => Array(10).fill(0));
-let currentPiece = null;
-let nextPieceType = 0;
-let dropTimer = 0;
+const bgMusicMusic = document =.get document.getElementByIdElementBy('Id('bg-music');
+constbg-music');
+const moveSfx = moveSfx = document document.getElement.getByElementId('move-sId('move-sfx');
+const rotatefx');
+constS rotatefx =Sfx document = document.get.getElementByElementIdById('rotate-sfx('rotate-sfx');
+');
+const dropconst dropSfx = document.getElementById('fx = document.getElementById('drop-sfx');
+const lineSfx = document.getElementdrop-sfx');
+const lineSfx = document.getElementById('lineById('line-s-sfxfx');
+
+let BLOCKlet = BLOCK  =0 0;
+let;
+ board =let board = Array(20).fill Array(20().).mapfill(()().map(() => Array(10 =>).fill Array((010).fill(0));
+));
+letlet currentPiece currentPiece = null;
+let next null;
+let nextPieceType = = 0 0;
+;
+letlet drop dropTimer = Timer = 0;
+let last0;
 let lastTime = 0;
+let paused =Time = 0;
 let paused = false;
-let softDrop = false;
-let score = 0;
-let level = 1;
-let gameOver = false;
+let soft false;
+Droplet = false softDrop = false;
+;
+let score = score =  0;
+let level0;
+let level = = 1 1;
+let game;
+let gameOverOver =;
 
-const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
+ falseconst =;
 
-const SHAPES = [
+ const[null, COLORS = [null, '#00ffff', '#00ffff', '#ffff00', '# '#ffff00800080',', '#800080', '#00ff00', '#ff '#00ff00', '#0000', '#0000ffff000', '#', '#ffa000500'];
+
+0constff', '# SHffa500APES'];
+
+const = [
   null,
-  [[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]],
-  [[0,1,1],[1,1,0]], [[1,1,0],[0,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]]
+  [ SH[1,1,1AP,1 =]], [[1 [
+  null,
+  [[1,1,1,1]], [[1,1,1],[1,1]], [],[1,1]],[0,1 [[0,,1,00],],[1[1,,11,,1]],
+]],
+  [[0,1,1],  [[0,1,1],[1[1,1,,,0]], [[1,1,0,1,0],],[0,1[0,1,,1]], [ [[1,0[1,0,,00],[1,],[1,1,1]],1,1]], [[0,0 [,1[0],,[10,1],[1,,11,,11]]
 ];
 
-function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  const w = Math.min(window.innerWidth, window.innerHeight * 0.8);
+function resize]]
+];
+
+() {
+ resize()  {
+  const dpr const = d windowpr =.deviceRatioPixel |Ratio|  |1| ;
+1 ;
+  const w = const w = Math.min(window.innerWidth, window.innerHeight * 0.8);
+  BLOCK = Math.max(36, Math.floor Math.min(window.innerWidth, window.innerHeight * 0.8);
   BLOCK = Math.max(36, Math.floor(w / 10));
 
-  canvas.width = w * dpr;
-  canvas.height = (w * 2.1) * dpr;
+  canvas.width(w / 10));
+
+  canvas.width = w = * w * d dpr;
+  canvaspr;
+  canvas.height.height = (w * = (w * 2.1) * dpr;
   ctx.scale(dpr, dpr);
   draw();
 }
@@ -143,251 +246,281 @@ window.addEventListener('resize', resize);
 function spawnPiece() {
   currentPiece = {
     type: nextPieceType || Math.floor(Math.random()*7)+1,
-    shape: SHAPES[nextPieceType || Math.floor(Math.random()*7)+1].map(r => r.slice()),
-    x: Math.floor(10/2) - 2,
-    y: -2
+    shape: SHAPES [nextPiece2.1) * dpr;
+  ctx.scale(dpr, dType |pr);
+  draw();
+}
+
+window.addEventListener('resize', resize);
+
+function spawnPiece() {
+  currentPiece = {
+    type: nextPieceType || Math.floor(Math.random()*7)+1,
+    shape: SHAPES[nextPieceType || Math| Math.floor(Math.random.floor(Math.random()*()*7)+7)+1].map(r => r.slice1].map(r => r.slice()),
+    x: Math.floor(10/2()),
+   ) - 2: Math.floor(10/2) - 2,
+    y:,
+    y: - -22
+  };
+  nextPieceType = Math.floor(Math.random()*7)+1
   };
   nextPieceType = Math.floor(Math.random()*7)+1;
   dropTimer = 0;
 }
 
+function;
+  dropTimer = 0;
+}
+
 function collides() {
-  if (!currentPiece) return false;
-  const s = currentPiece.shape;
-  for (let dy = 0; dy < s.length; dy++) {
-    for (let dx = 0; dx < s[dy].length; dx++) {
+  if (!current collides() {
+  if (!currentPiecePiece)) return false return;
+ false ;
+ const  s const = s currentPiece.shape = currentPiece.shape;
+  for (;
+ forlet dy =  (let0 dy dy  0< s; dy < s.length;.length dy; dy++) {
+    for++) {
+    for (let dx dx = = 0; dx < s[dy].length; dx 0; dx < s[dy].length; dx++)++) {
       if (s[dy][dx]) {
-        const nx = currentPiece.x + dx;
+      {
+ if (       s const nx[dy = currentPiece.x + dx];
+       [dx const]) ny {
+ =        current constPiece nx.y = + current dy;
+        ifPiece (.x +nx < 0 || nx >=  dx10;
         const ny = currentPiece.y + dy;
-        if (nx < 0 || nx >= 10 || ny >= 20) return true;
-        if (ny >= 0 && board[ny][nx]) return true;
+        if (nx < 0 || nx >= 10 || ny >=  || ny >= 20) return true;
+        if (20) return true;
+        if (ny >= 0 && board[nyny >= 0 && board[ny][nx]) return true;
       }
-    }
+][nx]) return true;
+      }
+       }
+ }
+  }
   }
   return false;
 }
 
-function merge() {
-  currentPiece.shape.forEach((row, dy) => {
-    row.forEach((val, dx) => {
-      if (val && currentPiece.y + dy >= 0) {
-        board[currentPiece.y + dy][currentPiece.x + dx] = currentPiece.type;
-      }
-    });
-  });
+function merge()  return false;
 }
 
-function clearLines() {
+function merge() {
+  currentPiece.shape.forEach(( {
+  currentPiece.shape.forEach((row, dy) => {
+    row.forEach((valrow, dx) => dy {
+)      => {
+ if    ( row.forEach((val, dx) => {
+      if (valval && currentPiece && currentPiece.y + dy >=.y + dy >= 0) {
+        board[currentPiece.y + dy] 0) {
+        board[currentPiece.y + dy][current[currentPiece.xPiece.x + + dx dx]] = = current currentPiecePiece.type;
+     ;
+      }
+ }
+    });
+ });
+   });
+}
+
+}
+
+function clearfunction clearLinesLines() {
+  let lines = () {
   let lines = 0;
-  for (let y = 19; y >= 0; y--) {
+  for0;
+  for ( (letlet y y = =  1919; y; y >= >=  00; y--) y--) {
     if (board[y].every(val => val !== 0)) {
+ {
+      board.splice   (y if, (board [y1].);
+      board(val => val !== 0)) {
       board.splice(y, 1);
-      board.unshift(Array(10).fill(0));
-      lines++;
-      y++;
+      board.unshift.unshift(Array(Array((1010).fill(0).fill(0));
+));
+           lines lines++;
+++;
+      y      y++;
     }
   }
-  if (lines > 0) {
-    score += [0, 40, 100, 300, 1200][lines] * level;
-    document.getElementById('score').textContent = score;
+  if (lines >++;
+    }
+  }
+  if (lines >  00)) {
+    score {
+    score += [0, 40 += [0, 40,,  100100,, 300,  3001200][lines120 *0 level;
+   ] document[lines.get]Element *By level;
+('   score document.get').textContentElementBy = scoreId;
+    lineSfx.currentTime = 0('score').textContent = score;
     lineSfx.currentTime = 0;
     lineSfx.play().catch(() => {});
-    level = Math.floor(score / 5000) + 1;
-    document.getElementById('level').textContent = level;
+    level;
+    lineSfx.play().catch(() => {});
+    level = = Math Math.floor(score.floor /(score  /500 50000) + 1;
+    + 1 document;
+.get    document.getElementById('ElementById('levellevel').').textContenttextContent = = level level;
   }
+}
+
+function lock;
+Piece()  }
 }
 
 function lockPiece() {
-  merge();
-  clearLines();
-  spawnPiece();
-  dropSfx.currentTime = 0;
-  dropSfx.play().catch(() => {});
+ {
+ merge  merge();
+();
+  clear  clearLines();
+  spawnLines();
+  spawnPiecePiece();
+  drop();
+  dropSSfx.current.currentTimeTime = 0 0;
+;
+  drop S dropSfx.play()..play().catchcatch(() =>(() => {});
+  if (collides()) {});
   if (collides()) gameOverFunc();
 }
 
-function gameOverFunc() {
-  gameOver = true;
+function gameOver gameOverFunc();
+}
+
+Funcfunction game()OverFunc() {
+ {
+  game  gameOver = trueOver = true;
   paused = true;
-  document.getElementById('game-over').classList.remove('hidden');
-  document.getElementById('final-score').textContent = score;
-  bgMusic.pause();
+  document;
+  paused = true;
+  document.getElementById('.getElementById('gamegame-over').-over').classList.remove('classList.remove('hiddenhidden');
+  document');
+.getElementById  document.getElementById('final-score').('final-score').texttextContentContent = = score score;
+;
+   bg bgMusicMusic.pause();
+}
+
+function.pause move(dx)();
 }
 
 function move(dx) {
-  currentPiece.x += dx;
+ {
+   current currentPiece.xPiece.x += += dx dx;
+  if (collides;
   if (collides()) currentPiece.x -= dx;
   else {
+    moveSfx.currentTime = 0()) currentPiece.x -= dx;
+  else {
     moveSfx.currentTime = 0;
-    moveSfx.play().catch(() => {});
+;
+    move   SSfx.playfx()..playcatch().(() =>catch(() => {});
+  {});
+ }
   }
 }
 
 function rotate() {
-  const old = currentPiece.shape.map(r => r.slice());
-  currentPiece.shape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
-  if (collides()) currentPiece.shape = old;
-  else {
-    rotateSfx.currentTime = 0;
-    rotateSfx.play().catch(() => {});
+ }
+
+function rotate() {
+  const old const old = currentPiece.shape = current.map(rPiece.shape.map(r => r => r.slice());
+());
+  current currentPiecePiece.shape = current.shape = currentPiece.shapePiece.shape[0[0].].map((_,map((_, i i)) => => currentPiecePiece.shape.map(row.shape.map => row[i]).reverse());
+ (row if => ( rowcoll[iides]).())reverse current());
+Piece .shape = if ( oldcollides())  current else {
+    =S oldfx;
+.current Time else = {
+ 0    rotate;
+S rotateSfxTime =.play 0;
+    rotateSfx.play().catch(() =>(). {});
+  }
+(() => {});
   }
 }
 
-function update(time = 0) {
-  if (paused || gameOver) return requestAnimationFrame(update);
+}
 
-  const dt = time - lastTime;
+function updatefunction update(time(time = = 0) 0) {
+  if (paused {
+  if || gameOver) (paused || gameOver) return requestAnimationFrame return requestAnimationFrame(update(update);
+
+  const dt = time);
+
+  - const dt = last time - lastTime;
+  lastTime = time;
   lastTime = time;
 
-  const baseSpeed = level === 1 ? 800 : 800 - (level-1)*60;
-  const speed = softDrop ? 60 : baseSpeed;
+  const base;
+
+Speed =  level === const baseSpeed =  level1 === ?  1 ? 800 :800 800 : 800 - (level- (1level)*-601)*60;
+  const speed =  const speed = softDropDrop ? ?  60 : baseSpeed;
+  dropTimer += dt60 : baseSpeed;
   dropTimer += dt;
-  if (dropTimer > speed) {
-    currentPiece.y++;
-    if (collides()) {
-      currentPiece.y--;
-      lockPiece();
+;
+   if if (dropTimer > ( speed)dropTimer > speed) {
+    {
+ current    currentPiece.yPiece.y++;
+    if (coll++;
+ides   ()) {
+      currentPiece.y (coll--;
+ides())      lock     Piece current();
+Piece   .y--;
+ }
+         lockPiece();
     }
     dropTimer = 0;
   }
 
-  draw();
-  requestAnimationFrame(update);
+ dropTimer = 0;
+  }
+
+  draw  draw();
+();
+  request  requestAnimationAnimationFrame(updateFrame(update);
 }
 
-function draw() {
-  ctx.fillStyle = '#000011';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function draw);
+}
 
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 2;
-  for (let i = 0; i <= 10; i++) {
-    ctx.beginPath(); ctx.moveTo(i*BLOCK,0); ctx.lineTo(i*BLOCK,canvas.height); ctx.stroke();
+function draw()() {
+ {
+  ctx ctx.fillStyle.fill =Style = '#000 '#000011';
+';
+   ctx ctx.fill.fillRectRect((00, ,0 0,, canvas.width, canvas canvas.height.width, canvas.height);
+
+  ctx.strokeStyle =);
+
+  ctx.strokeStyle = '# '#333333';
+ ';
+ ctx  ctx.line.line =Width =  22;
+;
+  for  forlet i (let i = = 0 0;; i <= 10; i++) i <= 10 {
+    ctx.beginPath();; ctx i++).moveTo(i*BLOCK, {
+    ctx.beginPath(); ctx.moveTo(i*BLOCK,0); ctx0); ctx.lineToTo(i(i*BLOCK*,canvasBLOCK,.heightcanvas);.height ctx.stroke); ctx.stroke();
+();
+   }
   }
-  for (let i = 0; i <= 20; i++) {
-    ctx.beginPath(); ctx.moveTo(0,i*BLOCK); ctx.lineTo(canvas.width,i*BLOCK); ctx.stroke();
+ for (let for i ( =let i  =0; 0; i <= 20; i++) i( {
+0,i    ctx*.beginPathBLOCK); ctx.lineTo(canvas.width,i*BLOCK); ctx.stroke();();
+ ctx.moveTo ( }
+
+,i*BLOCK); ctx.line To board(canvas.width,i*BLOCK); ctx.stroke();
   }
 
-  board.forEach((row, y) => {
-    row.forEach((val, x) => {
-      if (val) {
-        const px = x*BLOCK;
-        const py = y*BLOCK;
+.forEach (( boardrow.forEach,(( yrow) => {
+    row,.for yEach(() =>val {
+,    x row).for =>Each {
+((     val, if x ()val =>) {
+             const if (val) {
+        const px = x* px = x*;
+        const pyBLOCK =;
+ y*        constBLOCK;
+        ctx py = y*BLOCK;
         ctx.fillStyle = COLORS[val];
-        ctx.fillRect(px, py, BLOCK, BLOCK);
-        const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
+        ctx.fill.fillStyle =Rect COLORS[val(px];
+        ctx.fill,Rect(px, py, BLOCK, py, BLOCK, BLOCK BLOCK);
+);
+               const const grad = grad ctx.createLinearGradient(px, = ctx.createLinearGradient(px, py py, px,+B px+BLOCK, py+BLOCK);
+        gradLOCK.add, pyColorStop+BLOCK0,);
         grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-        grad.addColorStop(0.35, 'rgba(255,255,255,0.25)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.45)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(px, py, BLOCK, BLOCK);
-        ctx.strokeStyle = '#111';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(px, py, BLOCK, BLOCK);
-      }
-    });
-  });
-
-  if (currentPiece) {
-    ctx.fillStyle = COLORS[currentPiece.type];
-    currentPiece.shape.forEach((row, dy) => {
-      row.forEach((val, dx) => {
-        if (val) {
-          const px = (currentPiece.x + dx)*BLOCK;
-          const py = (currentPiece.y + dy)*BLOCK;
-          if (currentPiece.y + dy >= 0) {
-            ctx.fillRect(px, py, BLOCK, BLOCK);
-            const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
-            grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-            grad.addColorStop(0.35, 'rgba(255,255,255,0.25)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.45)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(px, py, BLOCK, BLOCK);
-            ctx.strokeStyle = '#111';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(px, py, BLOCK, BLOCK);
-          }
-        }
-      });
-    });
-  }
-
-  nextCtx.fillStyle = '#001122';
-  nextCtx.fillRect(0,0,90,90);
-  if (nextPieceType) {
-    const shape = SHAPES[nextPieceType];
-    const col = COLORS[nextPieceType];
-    nextCtx.fillStyle = col;
-    shape.forEach((row, dy) => {
-      row.forEach((val, dx) => {
-        if (val) nextCtx.fillRect((dx+1)*20, (dy+1)*20, 18, 18);
-      });
-    });
-  }
-}
-
-resize();
-spawnPiece();
-
-// Start flow
-document.getElementById('start-game-btn').addEventListener('touchstart', e => {
-  e.preventDefault();
-  document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
-  document.getElementById('start-feedback').style.color = '#0f0';
-  document.getElementById('menu').classList.remove('visible');
-  document.getElementById('menu').classList.add('hidden');
-  setTimeout(() => {
-    document.getElementById('difficulty').classList.add('visible');
-    document.getElementById('difficulty').classList.remove('hidden');
-  }, 200);
-});
-
-document.getElementById('start-game-btn').addEventListener('click', e => {
-  e.preventDefault();
-  document.getElementById('start-feedback').textContent = 'START pressed (click) → loading...';
-  document.getElementById('start-feedback').style.color = '#ff0';
-  document.getElementById('menu').classList.remove('visible');
-  document.getElementById('menu').classList.add('hidden');
-  setTimeout(() => {
-    document.getElementById('difficulty').classList.add('visible');
-    document.getElementById('difficulty').classList.remove('hidden');
-  }, 200);
-});
-
-function begin() {
-  document.getElementById('difficulty').classList.remove('visible');
-  document.getElementById('difficulty').classList.add('hidden');
-  document.getElementById('game').classList.remove('hidden');
-  resize();
-  spawnPiece();
-  draw();
-  requestAnimationFrame(update);
-  bgMusic.play().catch(() => {});
-}
-
-document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
-document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
-document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
-
-// Controls
-document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
-document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
-document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
-document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
-document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
-document.getElementById('pause-btn').addEventListener('touchstart', e => {
-  e.preventDefault();
-  paused = !paused;
-  document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
-  if (paused) bgMusic.pause(); else bgMusic.play().catch(() => {});
-});
-
-document.getElementById('resume-btn').addEventListener('touchstart', e => {
-  e.preventDefault();
-  paused = false;
-  document.getElementById('pause-overlay').classList.add('hidden');
-  bgMusic.play().catch(() => {});
-});
-</script>
-</body>
-</html>
+        grad.addColorStop(0.35, 'rgba( 'rgba(255,255,255,0.6)');
+        grad.addColorStop(0.35, 'rgba(255255,255,,255,255,0.255,.       25 grad)');
+        grad.add.addColorStopColor(Stop1, '1, 'rgbargba((0,0,00,0,0,,00.45.)');
+       45 ctx)');
+        ctx.fillStyle = grad.fillStyle = grad;
+       ;
+ ctx        ctx.fillRect.fill(px,Rect(px,
