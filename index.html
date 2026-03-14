@@ -6,8 +6,8 @@
   <title>GridFlow – by ꜱᴀᴍᴍɪᴇ</title>
   <style>
     body { margin:0; height:100vh; background:#000; overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
-    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; visibility:hidden; }
-    #menu.visible, #difficulty.visible, #pause-overlay.visible, #game-over.visible { visibility:visible; }
+    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; visibility:hidden; opacity:0; transition:opacity 0.3s; }
+    #menu.visible, #difficulty.visible, #pause-overlay.visible, #game-over.visible { visibility:visible; opacity:1; }
     .hidden { display:none !important; }
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px #0ff8; }
     button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
@@ -326,23 +326,28 @@ document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
   document.getElementById('start-feedback').style.color = '#0f0';
+  document.getElementById('menu').classList.remove('visible');
   document.getElementById('menu').classList.add('hidden');
   setTimeout(() => {
+    document.getElementById('difficulty').classList.add('visible');
     document.getElementById('difficulty').classList.remove('hidden');
-  }, 100); // small delay for browser to reflow
+  }, 200);
 });
 
 document.getElementById('start-game-btn').addEventListener('click', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed (click) → loading...';
   document.getElementById('start-feedback').style.color = '#ff0';
+  document.getElementById('menu').classList.remove('visible');
   document.getElementById('menu').classList.add('hidden');
   setTimeout(() => {
+    document.getElementById('difficulty').classList.add('visible');
     document.getElementById('difficulty').classList.remove('hidden');
-  }, 100);
+  }, 200);
 });
 
 function begin() {
+  document.getElementById('difficulty').classList.remove('visible');
   document.getElementById('difficulty').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   resize();
@@ -356,7 +361,7 @@ document.getElementById('easy-btn').addEventListener('touchstart', e => { e.prev
 document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
-// Controls (unchanged)
+// Controls
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
@@ -377,4 +382,4 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-  </html
+</html>
