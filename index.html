@@ -14,8 +14,9 @@
     #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; z-index:100; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; }
     .hidden { display:none !important; }
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px #0ff8; }
-    button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
-    button:active { background:#006; transform:scale(0.96); }
+    button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; transition:all 0.15s; }
+    button:active { background:#006; transform:scale(0.96); box-shadow:0 0 20px #0ff8; }
+    #start-feedback { font-size:1.4rem; margin-top:40px; color:#0f0; text-align:center; }
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { flex:1; position:relative; background:var(--grid); display:flex; justify-content:center; align-items:center; pointer-events:none; }
     #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:65vh; background:var(--grid); border:3px solid #444; border-bottom:14px solid #555; image-rendering:pixelated; }
@@ -41,6 +42,7 @@
   <button id="settings-btn">SETTINGS</button>
   <button id="help-btn">HELP</button>
   <button id="credits-btn">CREDITS</button>
+  <div id="start-feedback"></div>
 </div>
 
 <div id="difficulty" class="hidden">
@@ -127,7 +129,7 @@ function resize() {
   BLOCK = Math.max(36, Math.floor(w / 10));
 
   canvas.width = w * dpr;
-  canvas.height = (w * 2.05) * dpr; // slightly taller to guarantee bottom visibility
+  canvas.height = (w * 2.1) * dpr; // extra height for bottom visibility
   ctx.scale(dpr, dpr);
   draw();
 }
@@ -323,23 +325,18 @@ function draw() {
 resize();
 spawnPiece();
 
-// Audio
-bgMusic.src = "https://cdn.pixabay.com/download/audio/2023/08/07/audio_8b9d7d7e3a.mp3?filename=calm-piano-ambient-122456.mp3";
-bgMusic.volume = 0.25;
-bgMusic.loop = true;
+// ─── Start flow with extra reliability ────────────────────────
+document.getElementById('start-game-btn').addEventListener('click', startClick);
+document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
 
-// Start flow
-document.getElementById('start-game-btn').addEventListener('touchstart', e => {
+function startClick(e) {
   e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('start-feedback').textContent = 'START pressed → loading...';
+  document.getElementById('start-feedback').style.color = '#0f0';
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('difficulty').classList.remove('hidden');
-});
-
-document.getElementById('start-game-btn').addEventListener('click', e => {
-  e.preventDefault();
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('difficulty').classList.remove('hidden');
-});
+}
 
 function begin(diff) {
   document.getElementById('difficulty').classList.add('hidden');
@@ -351,11 +348,16 @@ function begin(diff) {
   bgMusic.play().catch(() => console.log("Music needs gesture"));
 }
 
+document.getElementById('easy-btn').addEventListener('click', begin);
 document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('easy'); });
+
+document.getElementById('medium-btn').addEventListener('click', begin);
 document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('medium'); });
+
+document.getElementById('extreme-btn').addEventListener('click', begin);
 document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('extreme'); });
 
-// Controls
+// Controls (unchanged)
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
@@ -385,4 +387,4 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-                                      </html>
+  </html>
