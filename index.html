@@ -11,6 +11,7 @@
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
     button:active { background:#006; transform:scale(0.96); }
+    #status { font-size:1.4rem; margin-top:30px; color:#0f0; }
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
     #canvas { width:62vw; max-width:380px; height:calc(62vw * 2); max-height:58vh; background:#000; border:3px solid #444; border-bottom:8px solid #444; image-rendering:pixelated; }
@@ -31,6 +32,7 @@
   <h1>GridFlow</h1>
   <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
   <button id="start-game-btn">START GAME</button>
+  <div id="start-status" style="margin-top:40px; font-size:1.2rem; color:#ff0;"></div>
 </div>
 
 <div id="difficulty" class="hidden">
@@ -38,6 +40,7 @@
   <button id="easy-btn">EASY</button>
   <button id="medium-btn">MEDIUM</button>
   <button id="extreme-btn">EXTREME</button>
+  <div id="diff-status" style="margin-top:40px; font-size:1.2rem; color:#0f0;"></div>
 </div>
 
 <div id="game" class="hidden">
@@ -230,15 +233,24 @@ function draw() {
   }
 }
 
-resize();
-spawnPiece();
+// ─── Button events with debug feedback ────────────────────────
+function showStartFeedback(msg, color = '#0f0') {
+  const el = document.getElementById('start-status') || document.createElement('div');
+  el.id = 'start-status';
+  el.style.marginTop = '40px';
+  el.style.fontSize = '1.2rem';
+  el.style.color = color;
+  el.textContent = msg;
+  document.getElementById('start-screen').appendChild(el);
+}
 
-// ─── Button events ────────────────────────────────────────
 document.getElementById('start-game-btn').addEventListener('click', startClick);
 document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
 
 function startClick(e) {
   e.preventDefault();
+  e.stopPropagation();
+  showStartFeedback('START pressed → loading difficulty...', '#0f0');
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('difficulty').classList.remove('hidden');
 }
@@ -249,25 +261,26 @@ function begin() {
   resize();
   draw();
   requestAnimationFrame(update);
+  alert('Game started! Piece should fall now.'); // debug popup to confirm
 }
 
-document.getElementById('easy').addEventListener('click', begin);
-document.getElementById('easy').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('easy-btn').addEventListener('click', begin);
+document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
-document.getElementById('medium').addEventListener('click', begin);
-document.getElementById('medium').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('medium-btn').addEventListener('click', begin);
+document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
-document.getElementById('extreme').addEventListener('click', begin);
-document.getElementById('extreme').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('extreme-btn').addEventListener('click', begin);
+document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
-// Controls
+// Controls (same as before)
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
 document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
 document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
 document.getElementById('ccw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
-document.getElementById('drop').addEventListener('touchstart', e => {
+document.getElementById('hard-drop').addEventListener('touchstart', e => {
   e.preventDefault();
   if (!paused && currentPiece) {
     while (!collides()) currentPiece.y++;
@@ -282,7 +295,7 @@ document.getElementById('pause-btn').addEventListener('touchstart', e => {
   document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
 });
 
-document.getElementById('resume').addEventListener('touchstart', e => {
+document.getElementById('resume-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = false;
   document.getElementById('pause-overlay').classList.add('hidden');
