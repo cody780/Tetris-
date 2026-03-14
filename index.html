@@ -13,20 +13,11 @@
       --border: #333;
       --grid-bg: #000;
     }
-
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      height:100vh;
-      background:var(--bg);
-      color:var(--text);
-      font-family:system-ui, sans-serif;
-      overflow:hidden;
-      touch-action:none;
-    }
+    body { height:100vh; background:var(--bg); color:var(--text); font-family:system-ui, sans-serif; overflow:hidden; touch-action:none; }
 
     #menu, #difficulty-screen, #pause-screen, #game-over-screen {
-      position:absolute; inset:0;
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
+      position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
       background:rgba(0,0,0,0.88); z-index:10;
     }
     .hidden { display:none !important; }
@@ -44,19 +35,17 @@
     }
     .menu-btn:active { background:#0099cc; border-color:#00eaff; transform:scale(0.96); }
 
-    #game-container {
-      height:100vh; display:flex; flex-direction:column;
-    }
+    #game-container { height:100vh; display:flex; flex-direction:column; }
 
     #game-area {
-      flex:1; /* upper ~half */
+      flex:1; /* ~upper half+ */
       position:relative;
-      display:flex; justify-content:center; align-items:center;
       background:#000;
+      display:flex; justify-content:center; align-items:center;
     }
 
     #game-board {
-      width:52vw; height:80vh;
+      width:55vw; height:85vh;
       background:var(--grid-bg);
       border:4px solid #444;
       box-shadow:0 0 70px rgba(0,0,0,0.98);
@@ -64,56 +53,57 @@
     }
 
     #next-box {
-      position:absolute; right:10px; top:10px;
-      width:100px; height:100px;
-      background:#0f0f1a; border:2px solid #555; border-radius:8px;
+      position:absolute; right:15px; top:15px;
+      width:110px; height:110px;
+      background:#0f0f1a; border:2px solid #555; border-radius:10px;
       display:flex; justify-content:center; align-items:center;
     }
 
     #hud {
-      position:absolute; top:10px; left:70px; right:10px;
+      position:absolute; top:15px; left:80px; right:15px;
       display:flex; justify-content:space-between;
       font-size:1.3rem; color:#0ff; z-index:5;
     }
 
     #pause-btn {
       position:absolute; top:15px; left:15px;
-      width:48px; height:48px;
+      width:50px; height:50px;
       background:rgba(240,180,0,0.85);
       border:3px solid #ff0; border-radius:50%;
-      color:white; font-size:1.8rem;
+      color:white; font-size:1.9rem;
       display:flex; align-items:center; justify-content:center;
       z-index:9; cursor:pointer;
     }
 
     #controller-area {
-      height:50vh; /* lower half - always visible in game */
+      height:45vh; /* lower half - always visible during game */
       background:#0d0d0d;
-      border-top:2px solid #333;
+      border-top:3px solid #444;
       display:flex; justify-content:space-between; align-items:center;
-      padding:0 3rem;
-      position:relative;
+      padding:0 4rem 2rem;
+      box-sizing:border-box;
     }
 
     .ctrl-btn {
-      width: clamp(80px, 18vw, 110px);
-      height: clamp(80px, 18vw, 110px);
-      background:rgba(90,90,90,0.8);
-      border:4px solid #777;
+      width: clamp(100px, 22vw, 140px);
+      height: clamp(100px, 22vw, 140px);
+      background:rgba(90,90,90,0.85);
+      border:5px solid #888;
       border-radius:50%;
-      color:white; font-size: clamp(2.4rem, 7vw, 3.2rem);
+      color:white; font-size: clamp(2.8rem, 8vw, 4rem);
       display:flex; align-items:center; justify-content:center;
       touch-action:manipulation;
       user-select:none;
+      box-shadow:0 6px 15px rgba(0,0,0,0.6);
     }
 
-    .ctrl-btn:active { transform:scale(0.92); background:rgba(120,120,120,0.9); }
+    .ctrl-btn:active { transform:scale(0.92); background:rgba(130,130,130,0.95); box-shadow:0 2px 8px rgba(0,0,0,0.8); }
 
-    .dpad-group { width:45%; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+    .dpad-group { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; width:45%; }
 
-    .action-group { width:45%; display:flex; flex-direction:column; align-items:center; gap:20px; }
+    .action-group { display:flex; flex-direction:column; align-items:center; gap:25px; width:45%; }
 
-    /* ... pause-screen & game-over styles same as before ... */
+    .hard-drop-btn { width: clamp(130px, 28vw, 170px); height: clamp(130px, 28vw, 170px); font-size: clamp(3.5rem, 9vw, 4.5rem); }
   </style>
 </head>
 <body>
@@ -123,21 +113,20 @@
     <div class="title"><h1>GridFlow</h1></div>
     <div class="creator">ꜱᴀᴍᴍɪᴇ</div>
     <button class="menu-btn" id="start-game-btn">START GAME</button>
-    <button class="menu-btn" id="levels-btn">LEVELS</button>
     <button class="menu-btn" id="settings-btn">SETTINGS</button>
     <button class="menu-btn" id="help-btn">HELP</button>
     <button class="menu-btn" id="credits-btn">CREDITS</button>
   </div>
 
-  <!-- Difficulty selection after pressing START GAME -->
+  <!-- Difficulty selection -->
   <div id="difficulty-screen" class="hidden">
-    <h2 style="font-size:4rem; color:#0ff; margin-bottom:2rem; text-shadow:0 0 20px #0ff;">SELECT DIFFICULTY</h2>
+    <h2 style="font-size:4.2rem; color:#0ff; margin-bottom:2.5rem; text-shadow:0 0 25px #0ff;">CHOOSE DIFFICULTY</h2>
     <button class="menu-btn" id="easy-btn">EASY</button>
     <button class="menu-btn" id="medium-btn">MEDIUM</button>
     <button class="menu-btn" id="extreme-btn">EXTREME</button>
   </div>
 
-  <!-- Game Screen -->
+  <!-- Game -->
   <div id="game-container" class="hidden">
     <div id="game-area">
       <div id="hud">
@@ -146,97 +135,141 @@
       </div>
       <div id="pause-btn">P</div>
       <canvas id="game-board"></canvas>
-      <div id="next-box"><canvas id="next-canvas"></canvas></div>
+      <div id="next-box"><canvas id="next-canvas" width="110" height="110"></canvas></div>
     </div>
 
     <div id="controller-area">
-      <!-- Left side D-pad -->
       <div class="dpad-group">
-        <div class="ctrl-btn" id="left">←</div>
-        <div class="ctrl-btn" id="right">→</div>
-        <div class="ctrl-btn" id="down">↓</div>
-        <div class="ctrl-btn" id="rotate-cw">↑</div>
+        <div class="ctrl-btn" id="left-btn">←</div>
+        <div class="ctrl-btn" id="right-btn">→</div>
+        <div class="ctrl-btn" id="down-btn">↓</div>
+        <div class="ctrl-btn" id="rotate-cw-btn">↑</div>
       </div>
 
-      <!-- Right side actions -->
       <div class="action-group">
-        <div class="ctrl-btn" id="rotate-ccw">Z</div>
-        <div class="ctrl-btn" id="hard-drop" style="width:120px; height:120px; font-size:3.5rem;">▼</div>
+        <div class="ctrl-btn" id="rotate-ccw-btn">Z</div>
+        <div class="ctrl-btn hard-drop-btn" id="hard-drop-btn">▼</div>
       </div>
     </div>
   </div>
 
-  <!-- Pause & Game Over screens (minimal placeholders) -->
-  <div id="pause-screen" class="hidden"><h1>PAUSED</h1><button class="menu-btn" id="resume">RESUME</button></div>
-  <div id="game-over-screen" class="hidden"><h1 style="color:#f33;">GAME OVER</h1><p>Such a loser...</p></div>
-
   <!-- Audio -->
   <audio id="bg-music" loop preload="auto"></audio>
-  <audio id="move-sfx" preload="auto">
+  <audio id="input-sfx" preload="auto">
     <source src="https://orangefreesounds.com/wp-content/uploads/2022/06/Tetris-block-move-sound-effect.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="drop-sfx" preload="auto">
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_0d7b6e7f2a.mp3?filename=game-over-arcade-8-bit-38328.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="line-sfx" preload="auto">
-    <source src="https://assets.codepen.io/243235/clear-line.mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    const menu = document.getElementById('menu');
-    const diffScreen = document.getElementById('difficulty-screen');
-    const gameContainer = document.getElementById('game-container');
-    const pauseBtn = document.getElementById('pause-btn');
+    // ... Your full game logic goes here (board, pieces, render loop, etc.) ...
+    // For now, minimal debug version to force visible content
 
-    const music = document.getElementById('bg-music');
-    const moveSfx = document.getElementById('move-sfx');
-    const dropSfx = document.getElementById('drop-sfx');
-    const lineSfx = document.getElementById('line-sfx');
+    const canvas = document.getElementById('game-board');
+    const ctx = canvas.getContext('2d');
+    const nextCanvas = document.getElementById('next-canvas');
+    const nextCtx = nextCanvas.getContext('2d');
 
-    // Difficulty selection flow
-    document.getElementById('start-game-btn').addEventListener('click', e => {
-      e.preventDefault();
-      menu.classList.add('hidden');
-      diffScreen.classList.remove('hidden');
-    });
+    let BLOCK = 0;
 
-    function startGame(diff) {
-      diffScreen.classList.add('hidden');
-      gameContainer.classList.remove('hidden');
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      BLOCK = Math.floor(w / 10); // 10 columns standard Tetris
 
-      let interval = diff === 'easy' ? 1200 : diff === 'medium' ? 700 : 400;
-      // dropInterval = interval;  // ← connect to your game logic
+      canvas.width = w * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
 
-      // Play solemn piano AFTER user interaction
-      music.src = "https://cdn.pixabay.com/download/audio/2024/01/10/audio_4f8d9e1c3b.mp3?filename=soft-piano-ambient-122456.mp3";
-      music.volume = 0.22;
-      music.play().catch(err => console.log("Music requires tap:", err));
-
-      console.log(`Started GridFlow - ${diff.toUpperCase()} mode`);
-      // Start your actual game loop, spawn piece, etc. here
+      nextCanvas.width = 110 * dpr;
+      nextCanvas.height = 110 * dpr;
+      nextCtx.scale(dpr, dpr);
     }
 
-    document.getElementById('easy-btn').addEventListener('click', () => startGame('easy'));
-    document.getElementById('medium-btn').addEventListener('click', () => startGame('medium'));
-    document.getElementById('extreme-btn').addEventListener('click', () => startGame('extreme'));
+    window.addEventListener('resize', resize);
+    resize();
 
-    // Controller buttons (only these control the game - no board touch)
-    document.getElementById('left').addEventListener('touchstart', e => { e.preventDefault(); /* move left */ moveSfx.currentTime=0; moveSfx.play().catch(()=>{}); });
-    document.getElementById('right').addEventListener('touchstart', e => { e.preventDefault(); /* move right */ moveSfx.currentTime=0; moveSfx.play().catch(()=>{}); });
-    document.getElementById('down').addEventListener('touchstart', e => { e.preventDefault(); /* soft drop */ });
-    document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); /* rotate cw */ moveSfx.currentTime=0; moveSfx.play().catch(()=>{}); });
-    document.getElementById('rotate-ccw').addEventListener('touchstart', e => { e.preventDefault(); /* rotate ccw */ moveSfx.currentTime=0; moveSfx.play().catch(()=>{}); });
-    document.getElementById('hard-drop').addEventListener('touchstart', e => { e.preventDefault(); /* hard drop */ dropSfx.currentTime=0; dropSfx.play().catch(()=>{}); });
+    // Debug render to confirm canvas works
+    function debugRender() {
+      ctx.fillStyle = '#000033';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    pauseBtn.addEventListener('click', e => {
-      e.preventDefault();
-      // pause logic...
-      document.getElementById('pause-screen').classList.remove('hidden');
+      // Draw grid lines
+      ctx.strokeStyle = '#222';
+      for (let i = 0; i <= 10; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * BLOCK, 0);
+        ctx.lineTo(i * BLOCK, canvas.height);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= 20; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * BLOCK);
+        ctx.lineTo(canvas.width, i * BLOCK);
+        ctx.stroke();
+      }
+
+      // Force draw a test block (cyan I piece at center)
+      ctx.fillStyle = '#00FFFF';
+      ctx.fillRect(3 * BLOCK, 5 * BLOCK, 4 * BLOCK, BLOCK);
+      ctx.strokeStyle = '#008888';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(3 * BLOCK, 5 * BLOCK, 4 * BLOCK, BLOCK);
+
+      // Next box test
+      nextCtx.fillStyle = '#001122';
+      nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+      nextCtx.fillStyle = '#FFFF00';
+      nextCtx.fillRect(20, 20, 60, 60);
+    }
+
+    debugRender(); // Run once to show something
+
+    // Difficulty buttons start game
+    document.getElementById('start-game-btn').onclick = () => {
+      document.getElementById('menu').classList.add('hidden');
+      document.getElementById('difficulty-screen').classList.remove('hidden');
+    };
+
+    function startGame(diff) {
+      document.getElementById('difficulty-screen').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('hidden');
+
+      // Play input sound on choice
+      const sfx = document.getElementById('input-sfx');
+      sfx.currentTime = 0;
+      sfx.play().catch(() => console.log("Sound OK after tap"));
+
+      // Background music
+      const music = document.getElementById('bg-music');
+      music.src = "https://cdn.pixabay.com/download/audio/2024/01/10/audio_4f8d9e1c3b.mp3?filename=soft-piano-ambient-122456.mp3";
+      music.volume = 0.22;
+      music.play().catch(() => {});
+
+      // Your real game init here...
+      // For now, loop debug render to simulate activity
+      setInterval(debugRender, 1000);
+    }
+
+    document.getElementById('easy-btn').onclick = () => startGame('easy');
+    document.getElementById('medium-btn').onclick = () => startGame('medium');
+    document.getElementById('extreme-btn').onclick = () => startGame('extreme');
+
+    // Controller buttons - larger + sound
+    const buttons = ['left-btn', 'right-btn', 'down-btn', 'rotate-cw-btn', 'rotate-ccw-btn', 'hard-drop-btn'];
+    buttons.forEach(id => {
+      document.getElementById(id).addEventListener('touchstart', e => {
+        e.preventDefault();
+        const sfx = document.getElementById('input-sfx');
+        sfx.currentTime = 0;
+        sfx.play().catch(() => {});
+        // Add your move/rotate/drop logic here
+        console.log(id + ' pressed');
+      });
     });
 
-    document.getElementById('resume').addEventListener('click', () => {
-      document.getElementById('pause-screen').classList.add('hidden');
-    });
+    document.getElementById('pause-btn').onclick = () => {
+      // pause logic
+      alert("Paused");
+    };
   </script>
 </body>
   </html>
