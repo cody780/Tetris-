@@ -13,7 +13,7 @@
     button:active { background:#006; transform:scale(0.96); }
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
-    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:62vh; background:#000; border:3px solid #444; border-bottom:10px solid #555; image-rendering:pixelated; }
+    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.05); max-height:62vh; background:#000; border:3px solid #444; border-bottom:10px solid #555; image-rendering:pixelated; }
     #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
     #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:space-between; align-items:center; padding:0 25px 15px; }
@@ -23,7 +23,7 @@
     .row { display:flex; gap:12px; }
     .actions { width:48%; display:flex; flex-direction:column; align-items:center; gap:30px; }
     #pause-overlay h2 { font-size:clamp(4rem,18vw,8rem); color:#ff4444; text-shadow:0 0 30px #f00; }
-    #debug { position:absolute; bottom:10px; left:10px; font-size:1rem; color:#0f0; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:4px; z-index:10; }
+    #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.3rem; color:#0ff; z-index:5; }
   </style>
 </head>
 <body>
@@ -43,10 +43,13 @@
 
 <div id="game" class="hidden">
   <div id="play-area">
+    <div id="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Level: <span id="level">1</span></div>
+    </div>
     <div id="pause-btn">P</div>
     <canvas id="canvas"></canvas>
     <div id="next-preview"><canvas id="next-canvas" width="90" height="90"></canvas></div>
-    <div id="debug">Loading...</div>
   </div>
 
   <div id="controller">
@@ -71,12 +74,32 @@
   <button id="resume-btn">RESUME</button>
 </div>
 
+<!-- Audio -->
+<audio id="bg-music" loop preload="auto"></audio>
+<audio id="move-sfx" preload="auto">
+  <source src="https://assets.codepen.io/243235/move-click.mp3" type="audio/mpeg">
+</audio>
+<audio id="rotate-sfx" preload="auto">
+  <source src="https://assets.codepen.io/243235/rotate-click.mp3" type="audio/mpeg">
+</audio>
+<audio id="drop-sfx" preload="auto">
+  <source src="https://assets.codepen.io/243235/drop.mp3" type="audio/mpeg">
+</audio>
+<audio id="line-sfx" preload="auto">
+  <source src="https://assets.codepen.io/243235/clear-line.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 // ────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const nextCtx = document.getElementById('next-canvas').getContext('2d');
-const debug = document.getElementById('debug');
+
+const bgMusic = document.getElementById('bg-music');
+const moveSfx = document.getElementById('move-sfx');
+const rotateSfx = document.getElementById('rotate-sfx');
+const dropSfx = document.getElementById('drop-sfx');
+const lineSfx = document.getElementById('line-sfx');
 
 let BLOCK = 0;
 let board = Array(20).fill().map(() => Array(10).fill(0));
@@ -86,6 +109,8 @@ let dropTimer = 0;
 let lastTime = 0;
 let paused = false;
 let softDrop = false;
+let score = 0;
+let level = 1;
 
 const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
@@ -117,7 +142,6 @@ function spawnPiece() {
   };
   nextPieceType = Math.floor(Math.random()*7)+1;
   dropTimer = 0;
-  debug.textContent = 'Piece spawned at y=' + currentPiece.y;
 }
 
 function collides() {
@@ -146,28 +170,51 @@ function merge() {
   });
 }
 
+function clearLines() {
+  let lines = 0;
+  for (let y = 19; y >= 0; y--) {
+    if (board[y].every(val => val !== 0)) {
+      board.splice(y, 1);
+      board.unshift(Array(10).fill(0));
+      lines++;
+      y++; // re-check same row after shift
+    }
+  }
+  if (lines > 0) {
+    score += [0, 40, 100, 300, 1200][lines] * level;
+    document.getElementById('score').textContent = score;
+    lineSfx.currentTime = 0;
+    lineSfx.play().catch(() => {});
+  }
+}
+
 function lockPiece() {
   merge();
+  clearLines();
   spawnPiece();
-  debug.textContent = 'Locked! New piece spawning...';
 }
 
 function move(dx) {
   currentPiece.x += dx;
   if (collides()) currentPiece.x -= dx;
+  else {
+    moveSfx.currentTime = 0;
+    moveSfx.play().catch(() => {});
+  }
 }
 
 function rotate() {
   const old = currentPiece.shape.map(r => r.slice());
   currentPiece.shape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
   if (collides()) currentPiece.shape = old;
+  else {
+    rotateSfx.currentTime = 0;
+    rotateSfx.play().catch(() => {});
+  }
 }
 
 function update(time = 0) {
-  if (paused) {
-    debug.textContent = 'PAUSED';
-    return requestAnimationFrame(update);
-  }
+  if (paused) return requestAnimationFrame(update);
 
   const dt = time - lastTime;
   lastTime = time;
@@ -176,10 +223,11 @@ function update(time = 0) {
   dropTimer += dt;
   if (dropTimer > speed) {
     currentPiece.y++;
-    debug.textContent = 'Falling... y=' + currentPiece.y.toFixed(1);
     if (collides()) {
       currentPiece.y--;
       lockPiece();
+      dropSfx.currentTime = 0;
+      dropSfx.play().catch(() => {});
     }
     dropTimer = 0;
   }
@@ -204,10 +252,24 @@ function draw() {
   board.forEach((row, y) => {
     row.forEach((val, x) => {
       if (val) {
+        const px = x*BLOCK;
+        const py = y*BLOCK;
+        // Base color
         ctx.fillStyle = COLORS[val];
-        ctx.fillRect(x*BLOCK, y*BLOCK, BLOCK, BLOCK);
+        ctx.fillRect(px, py, BLOCK, BLOCK);
+
+        // Shine gradient
+        const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
+        grad.addColorStop(0, 'rgba(255,255,255,0.45)');
+        grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(px, py, BLOCK, BLOCK);
+
+        // Border
         ctx.strokeStyle = '#111';
-        ctx.strokeRect(x*BLOCK, y*BLOCK, BLOCK, BLOCK);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px, py, BLOCK, BLOCK);
       }
     });
   });
@@ -217,9 +279,20 @@ function draw() {
     currentPiece.shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
         if (val) {
-          const px = currentPiece.x + dx;
-          const py = currentPiece.y + dy;
-          if (py >= 0) ctx.fillRect(px*BLOCK, py*BLOCK, BLOCK, BLOCK);
+          const px = (currentPiece.x + dx) * BLOCK;
+          const py = (currentPiece.y + dy) * BLOCK;
+          if (currentPiece.y + dy >= 0) {
+            ctx.fillRect(px, py, BLOCK, BLOCK);
+            const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
+            grad.addColorStop(0, 'rgba(255,255,255,0.45)');
+            grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(px, py, BLOCK, BLOCK);
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px, py, BLOCK, BLOCK);
+          }
         }
       });
     });
@@ -242,6 +315,11 @@ function draw() {
 resize();
 spawnPiece();
 
+// Audio setup
+bgMusic.src = "https://cdn.pixabay.com/download/audio/2023/08/07/audio_8b9d7d7e3a.mp3?filename=calm-piano-ambient-122456.mp3";
+bgMusic.volume = 0.25;
+bgMusic.loop = true;
+
 // Start flow
 document.getElementById('start-game-btn').addEventListener('click', startClick);
 document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
@@ -259,7 +337,11 @@ function begin() {
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-  debug.textContent = 'Game started! Piece falling...';
+
+  // Start music after user gesture
+  bgMusic.play().catch(() => {
+    console.log("Music play blocked - waiting for gesture");
+  });
 }
 
 document.getElementById('easy-btn').addEventListener('click', begin);
@@ -291,15 +373,15 @@ document.getElementById('pause-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = !paused;
   document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
-  debug.textContent = paused ? 'PAUSED' : 'Running';
+  if (paused) bgMusic.pause(); else bgMusic.play().catch(() => {});
 });
 
 document.getElementById('resume-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = false;
   document.getElementById('pause-overlay').classList.add('hidden');
-  debug.textContent = 'Resumed';
+  bgMusic.play().catch(() => {});
 });
 </script>
 </body>
-</html>
+                         </html>
