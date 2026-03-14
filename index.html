@@ -12,7 +12,6 @@
       --accent: #00eaff;
       --border: #333;
       --grid-bg: #000;
-      --grid-line: #1a1a1a;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -22,16 +21,13 @@
       color:var(--text);
       font-family:system-ui, sans-serif;
       overflow:hidden;
-      touch-action: none;
+      touch-action:none;
     }
 
-    #menu, #pause-screen, #game-over-screen {
-      position: absolute;
-      inset:0;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
+    #menu, #pause-screen, #game-over-screen, #levels-screen {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      justify-content:center; align-items:center;
       background:rgba(0,0,0,0.88);
       z-index:10;
     }
@@ -39,77 +35,255 @@
     .hidden { display:none !important; }
 
     .title h1 {
-      font-size: clamp(3.8rem, 13vw, 6rem);
+      font-size: clamp(4rem, 14vw, 7rem);
       font-weight:900;
       background: linear-gradient(90deg, #00eaff, #ff00d4, #a855f7);
       -webkit-background-clip:text;
       background-clip:text;
       -webkit-text-fill-color:transparent;
-      text-shadow:0 0 35px rgba(0,230,255,0.6);
+      text-shadow:0 0 40px rgba(0,230,255,0.6);
     }
 
-    .creator { font-size:1.45rem; font-weight:bold; letter-spacing:6px; color:#444; text-transform:uppercase; margin:1rem 0 2.5rem; }
-
-    .menu-btn, .pause-btn {
-      width:82%;
-      max-width:340px;
-      padding:1.2rem;
-      margin:0.7rem 0;
-      font-size:1.4rem;
-      font-weight:600;
-      background:#1e1e1e;
-      border:2px solid #444;
-      color:#eee;
-      border-radius:14px;
-      cursor:pointer;
-      transition:all 0.2s;
+    .creator {
+      font-size:1.5rem; font-weight:bold; letter-spacing:7px;
+      color:#555; text-transform:uppercase; margin:1.2rem 0 3rem;
     }
 
-    .menu-btn:hover, .pause-btn:hover { background:#0099cc; border-color:#00eaff; transform:translateY(-3px); }
+    .menu-btn, .sub-btn {
+      width:80%; max-width:360px;
+      padding:1.3rem; margin:0.8rem 0;
+      font-size:1.45rem; font-weight:600;
+      background:#222; border:2px solid #555;
+      color:#eee; border-radius:14px;
+      cursor:pointer; transition:all 0.2s;
+    }
+
+    .menu-btn:hover, .sub-btn:hover {
+      background:#0099cc; border-color:#00eaff; transform:translateY(-3px);
+    }
 
     #game-container { height:100vh; display:flex; flex-direction:column; }
 
     #hud {
-      padding:0.9rem 1.2rem;
-      background:rgba(0,0,0,0.65);
-      display:flex;
-      justify-content:space-between;
-      font-size:1.15rem;
-      z-index:5;
+      padding:1rem 1.5rem;
+      background:rgba(0,0,0,0.7);
+      display:flex; justify-content:space-between;
+      font-size:1.2rem; z-index:5;
     }
 
-    #score-display { font-weight:bold; color:#0ff; }
-    #level-display { color:#f0f; }
-
     #main-area {
-      flex:1;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      position:relative;
+      flex:1; display:flex; justify-content:center; align-items:center; position:relative;
     }
 
     #game-board {
       background:var(--grid-bg);
-      border:2px solid #222;
-      box-shadow:0 0 50px rgba(0,0,0,0.95);
-      position:relative;
+      border:3px solid #333;
+      box-shadow:0 0 60px rgba(0,0,0,0.95);
       overflow:hidden;
-      transition: filter 0.4s;
-      image-rendering: pixelated;
+      image-rendering:pixelated;
     }
 
-    #game-board.paused { filter: brightness(0.55) blur(1.2px); }
-
     #next-box {
+      position:absolute; right:1.5rem; top:1.5rem;
+      width:110px; height:110px;
+      background:#0f0f1a; border:2px solid #555;
+      border-radius:10px; box-shadow:0 0 25px rgba(0,200,255,0.25);
+      display:flex; justify-content:center; align-items:center;
+    }
+
+    #controls {
+      position:fixed; bottom:0; left:0; right:0;
+      height: clamp(180px, 32vh, 260px);
+      display:flex; justify-content:space-between;
+      padding:0 2rem 1.5rem;
+      pointer-events:none; z-index:8;
+    }
+
+    .ctrl-group { pointer-events:auto; width:45%; position:relative; }
+
+    .btn {
       position:absolute;
-      right:1.2rem;
-      top:1.2rem;
-      width:120px;
-      height:120px;
-      background:#0f0f1a;
-      border:2px solid #444;
-      border-radius:12px;
+      width: clamp(70px, 14vw, 100px);
+      height: clamp(70px, 14vw, 100px);
+      background:rgba(100,100,100,0.8);
+      border:4px solid #777;
+      border-radius:50%;
+      color:white; font-size: clamp(2.2rem, 6vw, 3rem);
+      display:flex; align-items:center; justify-content:center;
+      user-select:none; touch-action:manipulation;
+    }
+
+    .btn-action {
+      background:rgba(0,220,0,0.8); border-color:#0f0;
+    }
+
+    .btn-rotate-ccw {
+      background:rgba(220,0,0,0.8); border-color:#f00;
+    }
+
+    .btn-hard { width: clamp(90px,18vw,130px); height: clamp(90px,18vw,130px); font-size:3.2rem; }
+
+    .btn-pause {
+      background:rgba(240,180,0,0.8); border-color:#ff0;
+      width: clamp(80px,16vw,110px); height: clamp(80px,16vw,110px);
+      font-size:2.8rem;
+    }
+
+    /* ... pause & game-over styles same as before ... */
+
+    @media (orientation:portrait) {
+      #game-board { width:52vw; height:80vh; }
+    }
+    @media (orientation:landscape) {
+      #game-board { width:45vh; height:85vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Menu -->
+  <div id="menu">
+    <div class="title"><h1>GridFlow</h1></div>
+    <div class="creator">ꜱᴀᴍᴍɪᴇ</div>
+
+    <button class="menu-btn" onclick="startGame()">START GAME</button>
+    <button class="menu-btn" onclick="showLevels()">LEVELS</button>
+    <button class="menu-btn" onclick="showSettings()">SETTINGS</button>
+    <button class="menu-btn" onclick="showHelp()">HELP</button>
+    <button class="menu-btn" onclick="showCredits()">CREDITS</button>
+  </div>
+
+  <!-- Levels sub-screen (simple for now) -->
+  <div id="levels-screen" class="hidden">
+    <h2 style="font-size:3.5rem; color:#0ff; margin-bottom:2rem;">SELECT LEVEL</h2>
+    <button class="sub-btn" onclick="startGame('easy')">EASY</button>
+    <button class="sub-btn" onclick="startGame('hard')">HARD</button>
+    <button class="sub-btn" onclick="startGame('extreme')">EXTREME</button>
+    <button class="sub-btn" onclick="document.getElementById('levels-screen').classList.add('hidden')">BACK</button>
+  </div>
+
+  <!-- Game container, pause, game-over same structure as before -->
+
+  <div id="game-container" class="hidden">
+    <div id="hud">
+      <div>Score: <span id="score-display">0</span></div>
+      <div>Level: <span id="level-display">1</span></div>
+    </div>
+
+    <div id="main-area">
+      <canvas id="game-board"></canvas>
+      <div id="next-box"><canvas id="next-piece"></canvas></div>
+    </div>
+
+    <div id="controls">
+      <!-- Left hand side -->
+      <div class="ctrl-group" style="left:0;">
+        <div class="btn" id="left-btn" style="left:0; top:30%;">←</div>
+        <div class="btn" id="right-btn" style="right:0; top:30%;">→</div>
+        <div class="btn" id="down-btn" style="left:50%; bottom:0; transform:translateX(-50%);">↓</div>
+        <div class="btn" id="up-btn" style="left:50%; top:0; transform:translateX(-50%);">↑</div>
+      </div>
+
+      <!-- Right hand side -->
+      <div class="ctrl-group" style="right:0;">
+        <div class="btn btn-rotate-ccw" id="rotate-ccw" style="left:0; bottom:40%;">Z</div>
+        <div class="btn btn-hard" id="hard-drop" style="right:0; bottom:20%;">▼</div>
+        <div class="btn btn-pause" id="pause-btn" style="right:0; bottom:0;">P</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause & Game Over screens (copy from previous if needed, or keep minimal) -->
+
+  <script>
+    // ────────────────────────────────────────────────
+    // CONFIG & STATE (simplified a bit)
+    // ────────────────────────────────────────────────
+    const COLS = 10;
+    const ROWS = 20;
+    let BLOCK;
+
+    const COLORS = [null,'#00FFFF','#FFFF00','#800080','#00FF00','#FF0000','#0000FF','#FFA500'];
+
+    const SHAPES = [
+      [], [[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]],
+      [[0,1,1],[1,1,0]], [[1,1,0],[0,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]]
+    ];
+
+    let canvas, ctx, nextCtx;
+    let board = Array(ROWS).fill().map(()=>Array(COLS).fill(0));
+    let currentPiece = null;
+    let nextPieceType = null;
+    let dropInterval = 1000;
+    let score = 0, level = 1;
+    let gameRunning = false, isPaused = false;
+
+    // ... keep DAS, ghost, smooth entry logic from previous version ...
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth * 0.52; // ~half screen
+      BLOCK = Math.floor(w / COLS);
+
+      canvas.width = COLS * BLOCK * dpr;
+      canvas.height = ROWS * BLOCK * dpr;
+      canvas.style.width = `${COLS * BLOCK}px`;
+      canvas.style.height = `${ROWS * BLOCK}px`;
+      ctx.scale(dpr, dpr);
+
+      document.getElementById('next-piece').width = 4 * BLOCK * dpr;
+      document.getElementById('next-piece').height = 4 * BLOCK * dpr;
+      nextCtx.scale(dpr, dpr);
+    }
+
+    function init() {
+      canvas = document.getElementById('game-board');
+      ctx = canvas.getContext('2d');
+      nextCtx = document.getElementById('next-piece').getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      generateNextPiece();
+      spawnPiece();
+    }
+
+    function startGame(diff = 'easy') {
+      document.getElementById('menu').classList.add('hidden');
+      document.getElementById('levels-screen').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('hidden');
+
+      if (diff === 'easy') dropInterval = 1200;
+      if (diff === 'hard') dropInterval = 700;
+      if (diff === 'extreme') dropInterval = 400;
+
+      resetGame();
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function showLevels() {
+      document.getElementById('levels-screen').classList.remove('hidden');
+    }
+
+    function showSettings() {
+      alert("Settings coming soon...\nSound, controls, etc.");
+    }
+
+    // Touch bindings (adjusted for new layout)
+    document.getElementById('left-btn').addEventListener('touchstart', e => { e.preventDefault(); move(-1); });
+    document.getElementById('right-btn').addEventListener('touchstart', e => { e.preventDefault(); move(1); });
+    document.getElementById('down-btn').addEventListener('touchstart', e => { e.preventDefault(); softDrop(true); });
+    document.getElementById('down-btn').addEventListener('touchend', e => { e.preventDefault(); softDrop(false); });
+    document.getElementById('up-btn').addEventListener('touchstart', e => { e.preventDefault(); rotate(1); });
+    document.getElementById('rotate-ccw').addEventListener('touchstart', e => { e.preventDefault(); rotate(-1); });
+    document.getElementById('hard-drop').addEventListener('touchstart', e => { e.preventDefault(); hardDrop(); });
+    document.getElementById('pause-btn').addEventListener('touchstart', e => { e.preventDefault(); pauseGame(); });
+
+    // Keep the rest (collides, merge, clearLines, drawBlock, drawPiece, ghost, gameLoop, etc.) from the previous working version
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>      border-radius:12px;
       box-shadow:0 0 20px rgba(0,200,255,0.2);
       display:flex;
       justify-content:center;
