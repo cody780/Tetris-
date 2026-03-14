@@ -12,7 +12,7 @@
       --neon: #0ff;
     }
     body { margin:0; height:100vh; background:var(--bg); overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
-    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; z-index:100; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; }
     .hidden { display:none !important; }
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px #0ff8; }
     button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
@@ -30,8 +30,8 @@
     .btn:active { background:#666; transform:scale(0.92); }
     #center { grid-area:2 / 2 / 3 / 3; }
     #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; }
-    #score-board { animation:scoreflash 1.8s infinite alternate; font-size:1.6rem; }
-    @keyframes scoreflash { from { opacity:0.75; text-shadow:0 0 12px #0ff8; } to { opacity:1; text-shadow:0 0 24px #0ff; } }
+    #score-panel { background:rgba(0,0,0,0.6); padding:8px 16px; border-radius:12px; border:2px solid #0ff8; box-shadow:0 0 20px #0ff8; animation:neonglow 2s infinite alternate; }
+    @keyframes neonglow { from { box-shadow:0 0 10px #0ff8; } to { box-shadow:0 0 30px #0ff; } }
     #game-over h2 { color:#ff4444; text-shadow:0 0 30px #f00; }
   </style>
 </head>
@@ -57,8 +57,8 @@
 <div id="game" class="hidden">
   <div id="play-area">
     <div id="hud">
-      <div>Score: <span id="score">0</span></div>
-      <div id="score-board">Level: <span id="level">1</span></div>
+      <div id="score-panel">Score: <span id="score">0</span></div>
+      <div id="score-panel">Level: <span id="level">1</span></div>
     </div>
     <div id="pause-btn">P</div>
     <div id="sound-toggle">🔊</div>
@@ -85,6 +85,20 @@
   <h2 style="margin:20px 0;">Such a loser...</h2>
   <div style="font-size:2rem; color:#ff0;">Final Score: <span id="final-score">0</span></div>
   <button id="restart-btn" style="margin-top:40px;">TRY AGAIN</button>
+</div>
+
+<div id="credits-screen" class="hidden">
+  <h2 style="color:#0ff; margin-bottom:30px;">CREDITS</h2>
+  <div style="text-align:center; max-width:90%; font-size:1.2rem; line-height:1.6;">
+    <p><strong>Game Design & Code:</strong> ꜱᴀᴍᴍɪᴇ</p>
+    <p><strong>Inspiration:</strong> Classic Tetris + modern mobile controls</p>
+    <p><strong>Graphics & Layout:</strong> Custom-built for mobile portrait</p>
+    <p><strong>Sound Effects:</strong> Retro 8-bit pack (move, rotate, drop, line clear)</p>
+    <p><strong>Background Music:</strong> "River Flows in You" calm piano version (Pixabay free)</p>
+    <p><strong>Special Thanks:</strong> GitHub Pages for hosting, open-source community</p>
+    <p style="margin-top:40px; color:#777;">Made with love in Toronto, 2026</p>
+  </div>
+  <button id="back-credits" style="margin-top:50px;">BACK</button>
 </div>
 
 <!-- Audio -->
@@ -114,6 +128,8 @@ let dropTimer = 0;
 let lastTime = 0;
 let paused = false;
 let softDrop = false;
+let holdingLeft = false;
+let holdingRight = false;
 let score = 0;
 let level = 1;
 let gameOver = false;
@@ -239,7 +255,15 @@ function update(time = 0) {
   const dt = time - lastTime;
   lastTime = time;
 
-  const baseSpeed = level === 1 ? 800 : 800 - (level-1)*60;
+  // DAS for left/right hold
+  if (holdingLeft) {
+    move(-1);
+  }
+  if (holdingRight) {
+    move(1);
+  }
+
+  const baseSpeed = level === 1 ? 1200 : level === 2 ? 700 : 350;
   const speed = softDrop ? 60 : baseSpeed;
   dropTimer += dt;
   if (dropTimer > speed) {
@@ -277,7 +301,7 @@ function draw() {
         ctx.fillRect(px, py, BLOCK, BLOCK);
         const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
         grad.addColorStop(0, 'rgba(255,255,255,0.7)');
-        grad.addColorStop(0.3, 'rgba(255,255,255,0.35)');
+        grad.addColorStop(0.35, 'rgba(255,255,255,0.35)');
         grad.addColorStop(1, 'rgba(0,0,0,0.5)');
         ctx.fillStyle = grad;
         ctx.fillRect(px, py, BLOCK, BLOCK);
@@ -299,7 +323,7 @@ function draw() {
             ctx.fillRect(px, py, BLOCK, BLOCK);
             const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
             grad.addColorStop(0, 'rgba(255,255,255,0.7)');
-            grad.addColorStop(0.3, 'rgba(255,255,255,0.35)');
+            grad.addColorStop(0.35, 'rgba(255,255,255,0.35)');
             grad.addColorStop(1, 'rgba(0,0,0,0.5)');
             ctx.fillStyle = grad;
             ctx.fillRect(px, py, BLOCK, BLOCK);
@@ -329,28 +353,31 @@ function draw() {
 resize();
 spawnPiece();
 
-// Audio
+// Audio setup
 bgMusic.src = "https://cdn.pixabay.com/download/audio/2023/08/07/audio_8b9d7d7e3a.mp3?filename=calm-piano-ambient-122456.mp3";
 bgMusic.volume = 0.25;
-bgMusic.loop = true;
 
 // Sound toggle
 document.getElementById('sound-toggle').addEventListener('touchstart', e => {
   e.preventDefault();
   soundsOn = !soundsOn;
   document.getElementById('sound-toggle').textContent = soundsOn ? '🔊' : '🔇';
-  if (!soundsOn) bgMusic.pause(); else if (!paused) bgMusic.play().catch(() => {});
+  if (!soundsOn) {
+    bgMusic.pause();
+  } else if (!paused) {
+    bgMusic.play().catch(() => {});
+  }
 });
 
 // Start flow
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
-  document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
+  document.getElementById('start-feedback').textContent = 'START pressed → loading...';
   document.getElementById('start-feedback').style.color = '#0f0';
   document.getElementById('menu').classList.add('hidden');
   setTimeout(() => {
     document.getElementById('difficulty').classList.remove('hidden');
-  }, 100);
+  }, 150);
 });
 
 function begin(diff) {
@@ -367,12 +394,18 @@ document.getElementById('easy-btn').addEventListener('touchstart', e => { e.prev
 document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('medium'); });
 document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('extreme'); });
 
-// Controls
-document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
-document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
+// Controls with hold for left/right
+document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); holdingLeft = true; });
+document.getElementById('move-left').addEventListener('touchend', e => { e.preventDefault(); holdingLeft = false; });
+
+document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); holdingRight = true; });
+document.getElementById('move-right').addEventListener('touchend', e => { e.preventDefault(); holdingRight = false; });
+
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
 document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
+
 document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
+
 document.getElementById('hard-drop').addEventListener('touchstart', e => {
   e.preventDefault();
   if (!paused && currentPiece) {
@@ -397,4 +430,4 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-  </html>
+                                                                                                                </html>
