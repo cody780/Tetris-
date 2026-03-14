@@ -1,242 +1,114 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GridFlow – by ꜱᴀᴍᴍɪᴇ</title>
+  <title>GridFlow Debug – by ꜱᴀᴍᴍɪᴇ</title>
   <style>
-    :root {
-      --bg: #0a0a0a;
-      --grid-bg: #000;
-      --grid-line: #1a1a1a;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      height:100vh;
-      background:var(--bg);
-      color:#ddd;
-      font-family:system-ui, sans-serif;
-      overflow:hidden;
-      touch-action:none;
+      margin:0; padding:0; height:100vh; background:#000; overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee;
     }
-
     #menu, #difficulty-screen {
-      position:absolute; inset:0;
+      position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:20;
       display:flex; flex-direction:column; justify-content:center; align-items:center;
-      background:rgba(0,0,0,0.88); z-index:10;
     }
     .hidden { display:none !important; }
 
-    .title h1 { font-size: clamp(5rem, 18vw, 9rem); font-weight:900; background:linear-gradient(90deg,#00eaff,#ff00d4,#a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 50px rgba(0,230,255,0.7); }
-    .creator { font-size:1.7rem; letter-spacing:9px; color:#555; text-transform:uppercase; margin:1.8rem 0 4rem; }
-
-    .menu-btn {
-      width:84%; max-width:400px;
-      padding:1.5rem; margin:1.2rem 0;
-      font-size:1.6rem; font-weight:600;
-      background:#222; border:3px solid #666;
-      color:#eee; border-radius:18px;
-      cursor:pointer;
+    button {
+      width:80%; max-width:340px; padding:18px; margin:12px 0;
+      font-size:22px; background:#222; border:3px solid #666; color:#eee; border-radius:12px;
     }
-    .menu-btn:active { background:#0099cc; border-color:#00eaff; transform:scale(0.95); }
+    button:active { background:#006699; }
 
-    #game-container { height:100vh; display:flex; flex-direction:column; }
+    #game-container {
+      height:100vh; display:flex; flex-direction:column;
+    }
 
     #game-area {
-      flex:1;
-      position:relative;
-      background:#000;
-      pointer-events:none; /* no touch on board area */
+      flex:1; background:#000; position:relative; pointer-events:none;
     }
 
     #game-board {
-      width:58vw;
-      height:90vh;
-      background:var(--grid-bg);
-      border:4px solid #444;
-      box-shadow:0 0 80px rgba(0,0,0,0.98);
+      width:60vw; max-width:380px; height:80vh; max-height:600px;
+      background:#000; border:3px solid #444;
       image-rendering:pixelated;
     }
 
-    #next-box {
-      position:absolute; right:12px; top:12px;
-      width:100px; height:100px;
-      background:#0f0f1a; border:2px solid #555; border-radius:10px;
-      display:flex; justify-content:center; align-items:center;
-    }
-
-    #hud {
-      position:absolute; top:12px; left:80px; right:12px;
-      display:flex; justify-content:space-between;
-      font-size:1.4rem; color:#0ff; z-index:5;
-    }
-
-    #pause-btn {
-      position:absolute; top:12px; left:12px;
-      width:52px; height:52px;
-      background:rgba(240,180,0,0.9);
-      border:3px solid #ff0; border-radius:50%;
-      color:white; font-size:2rem;
-      display:flex; align-items:center; justify-content:center;
-      z-index:9;
-    }
-
     #controller-area {
-      height:45vh;
-      background:#0d0d0d;
-      border-top:4px solid #444;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:0 5rem 2.5rem;
+      height:45vh; background:#111; border-top:4px solid #444;
+      display:flex; justify-content:space-around; align-items:center; padding:0 20px;
     }
 
     .ctrl-btn {
-      width: clamp(110px, 24vw, 150px);
-      height: clamp(110px, 24vw, 150px);
-      background:rgba(80,80,80,0.9);
-      border:5px solid #999;
-      border-radius:50%;
-      color:white; font-size: clamp(3rem, 9vw, 4.2rem);
+      width:110px; height:110px; min-width:100px; min-height:100px;
+      background:#444; border:5px solid #888; border-radius:50%;
+      color:white; font-size:40px; font-weight:bold;
       display:flex; align-items:center; justify-content:center;
+      box-shadow:0 6px 16px rgba(0,0,0,0.7);
       touch-action:manipulation;
-      box-shadow:0 8px 20px rgba(0,0,0,0.7);
     }
-
-    .ctrl-btn:active { transform:scale(0.9); background:rgba(140,140,140,1); box-shadow:0 4px 12px rgba(0,0,0,0.9); }
-
-    .dpad-group { display:flex; flex-wrap:wrap; justify-content:center; gap:18px; width:45%; }
-
-    .action-group { display:flex; flex-direction:column; align-items:center; gap:30px; width:45%; }
-
-    .hard-btn { width: clamp(140px, 30vw, 180px); height: clamp(140px, 30vw, 180px); font-size: clamp(4rem, 10vw, 5rem); }
+    .ctrl-btn:active { background:#777; transform:scale(0.92); }
   </style>
 </head>
 <body>
 
-  <!-- Menu -->
   <div id="menu">
-    <div class="title"><h1>GridFlow</h1></div>
-    <div class="creator">ꜱᴀᴍᴍɪᴇ</div>
-    <button class="menu-btn" id="start-btn">START GAME</button>
-    <button class="menu-btn" id="settings-btn">SETTINGS</button>
-    <button class="menu-btn" id="help-btn">HELP</button>
-    <button class="menu-btn" id="credits-btn">CREDITS</button>
+    <h1 style="font-size:80px; margin-bottom:20px; color:#0ff; text-shadow:0 0 30px #0ff;">GridFlow</h1>
+    <p style="margin-bottom:40px;">by ꜱᴀᴍᴍɪᴇ</p>
+    <button id="start">START GAME</button>
   </div>
 
-  <!-- Difficulty -->
   <div id="difficulty-screen" class="hidden">
-    <h2 style="font-size:4.5rem; color:#0ff; margin-bottom:3rem; text-shadow:0 0 30px #0ff;">CHOOSE LEVEL</h2>
-    <button class="menu-btn" id="easy">EASY</button>
-    <button class="menu-btn" id="medium">MEDIUM</button>
-    <button class="menu-btn" id="extreme">EXTREME</button>
+    <h2 style="font-size:50px; color:#0ff; margin-bottom:40px;">Choose Difficulty</h2>
+    <button id="easy">EASY</button>
+    <button id="medium">MEDIUM</button>
+    <button id="extreme">EXTREME</button>
   </div>
 
-  <!-- Game -->
   <div id="game-container" class="hidden">
     <div id="game-area">
-      <div id="hud">
-        <div>Score: <span id="score">0</span></div>
-        <div>Level: <span id="level">1</span></div>
-      </div>
-      <div id="pause-btn">P</div>
       <canvas id="game-board"></canvas>
-      <div id="next-box"><canvas id="next-canvas" width="100" height="100"></canvas></div>
     </div>
-
     <div id="controller-area">
-      <div class="dpad-group">
-        <div class="ctrl-btn" id="left">←</div>
-        <div class="ctrl-btn" id="right">→</div>
-        <div class="ctrl-btn" id="down">↓</div>
-        <div class="ctrl-btn" id="rotate-cw">↑</div>
+      <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
+        <div class="ctrl-btn">←</div>
+        <div class="ctrl-btn">→</div>
+        <div class="ctrl-btn">↓</div>
+        <div class="ctrl-btn">↑</div>
       </div>
-
-      <div class="action-group">
-        <div class="ctrl-btn" id="rotate-ccw">Z</div>
-        <div class="ctrl-btn hard-btn" id="hard">▼</div>
+      <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
+        <div class="ctrl-btn">Z</div>
+        <div class="ctrl-btn" style="width:140px; height:140px; font-size:60px;">▼</div>
       </div>
     </div>
   </div>
-
-  <audio id="input-sfx" preload="auto">
-    <source src="https://orangefreesounds.com/wp-content/uploads/2022/06/Tetris-block-move-sound-effect.mp3" type="audio/mpeg">
-  </audio>
 
   <script>
     const canvas = document.getElementById('game-board');
     const ctx = canvas.getContext('2d');
-    const nextCanvas = document.getElementById('next-canvas');
-    const nextCtx = nextCanvas.getContext('2d');
 
     let BLOCK = 0;
-    let currentPiece = null;
-    let dropCounter = 0;
-    let dropInterval = 1000;
-    let lastTime = 0;
 
-    const COLORS = [
-      null,
-      '#00FFFF', // I cyan
-      '#FFFF00', // O yellow
-      '#800080', // T purple
-      '#00FF00', // S green
-      '#FF0000', // Z red
-      '#0000FF', // J blue
-      '#FFA500'  // L orange
-    ];
-
-    // Simple test piece (I horizontal)
-    const SHAPES = [
-      null,
-      [[1,1,1,1]], // I
-      [[1,1],[1,1]], // O etc...
-      // add more later
-    ];
-
-    function resize() {
+    function resizeCanvas() {
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
-      BLOCK = Math.floor(w / 10);
+      BLOCK = Math.max(34, Math.floor(w / 10));  // min 34px so lines visible
 
       canvas.width = w * dpr;
       canvas.height = canvas.clientHeight * dpr;
       ctx.scale(dpr, dpr);
 
-      nextCanvas.width = 100 * dpr;
-      nextCanvas.height = 100 * dpr;
-      nextCtx.scale(dpr, dpr);
+      console.log(`Canvas ready: ${canvas.width}x${canvas.height}px, BLOCK = ${BLOCK}px`);
+      drawDebug();
     }
 
-    window.addEventListener('resize', resize);
-    resize();
-
-    function drawSolidBlock(x, y, color) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x*BLOCK, y*BLOCK, BLOCK, BLOCK);
-
-      // Border (darker)
-      ctx.strokeStyle = '#111';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x*BLOCK, y*BLOCK, BLOCK, BLOCK);
-
-      // Shine top-left
-      const grad = ctx.createLinearGradient(x*BLOCK, y*BLOCK, x*BLOCK+BLOCK, y*BLOCK+BLOCK);
-      grad.addColorStop(0, 'rgba(255,255,255,0.45)');
-      grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(x*BLOCK, y*BLOCK, BLOCK, BLOCK);
-
-      // Tiny shadow bottom-right
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillRect(x*BLOCK + BLOCK*0.7, y*BLOCK + BLOCK*0.7, BLOCK*0.3, BLOCK*0.3);
-    }
-
-    function drawBoard() {
-      ctx.fillStyle = '#000';
+    function drawDebug() {
+      ctx.fillStyle = '#000022';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Grid lines
-      ctx.strokeStyle = '#1a1a1a';
+      // Grid lines - must be visible
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1;
       for (let i = 0; i <= 10; i++) {
         ctx.beginPath();
         ctx.moveTo(i * BLOCK, 0);
@@ -249,81 +121,47 @@
         ctx.lineTo(canvas.width, i * BLOCK);
         ctx.stroke();
       }
+
+      // Big cyan test block in center
+      ctx.fillStyle = '#00FFFF';
+      ctx.fillRect(3 * BLOCK, 8 * BLOCK, 4 * BLOCK, BLOCK);
+      ctx.strokeStyle = '#008888';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(3 * BLOCK, 8 * BLOCK, 4 * BLOCK, BLOCK);
+
+      console.log("Debug draw called - should see grid + cyan bar");
     }
 
-    function drawPiece() {
-      if (!currentPiece) return;
-      currentPiece.shape.forEach((row, dy) => {
-        row.forEach((val, dx) => {
-          if (val) {
-            const px = currentPiece.x + dx;
-            const py = currentPiece.y + dy;
-            if (py >= 0) drawSolidBlock(px, py, COLORS[currentPiece.type]);
-          }
-        });
-      });
-    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    function update(time = 0) {
-      const delta = time - lastTime;
-      lastTime = time;
-
-      dropCounter += delta;
-      if (dropCounter > dropInterval) {
-        currentPiece.y++;
-        dropCounter = 0;
-      }
-
-      drawBoard();
-      drawPiece();
-
-      requestAnimationFrame(update);
-    }
-
-    // Start game flow
-    document.getElementById('start-btn').onclick = () => {
+    // Start flow
+    document.getElementById('start').onclick = () => {
       document.getElementById('menu').classList.add('hidden');
       document.getElementById('difficulty-screen').classList.remove('hidden');
     };
 
-    function startGame(diff) {
+    function startGame() {
       document.getElementById('difficulty-screen').classList.add('hidden');
       document.getElementById('game-container').classList.remove('hidden');
-
-      // Play sound on choice
-      const sfx = document.getElementById('input-sfx');
-      sfx.currentTime = 0;
-      sfx.play().catch(() => {});
-
-      // Simple test piece
-      currentPiece = {
-        type: 1, // I cyan
-        shape: [[1,1,1,1]],
-        x: 3,
-        y: 0
-      };
-
-      // Start falling
-      requestAnimationFrame(update);
+      resizeCanvas();          // re-apply after show
+      drawDebug();             // force immediate draw
+      setInterval(drawDebug, 2000); // keep drawing to confirm loop
+      console.log("Game area should now be visible");
     }
 
-    document.getElementById('easy').onclick = () => startGame('easy');
-    document.getElementById('medium').onclick = () => startGame('medium');
-    document.getElementById('extreme').onclick = () => startGame('extreme');
+    document.getElementById('easy').onclick = startGame;
+    document.getElementById('medium').onclick = startGame;
+    document.getElementById('extreme').onclick = startGame;
 
-    // Controller buttons (larger + sound)
-    ['left', 'right', 'down', 'rotate-cw', 'rotate-ccw', 'hard'].forEach(id => {
-      document.getElementById(id + '-btn').addEventListener('touchstart', e => {
+    // Controller sound test
+    document.querySelectorAll('.ctrl-btn').forEach(btn => {
+      btn.addEventListener('touchstart', e => {
         e.preventDefault();
-        const sfx = document.getElementById('input-sfx');
-        sfx.currentTime = 0;
-        sfx.play().catch(() => {});
-        console.log(id + ' pressed');
-        // Add real move/rotate/drop logic later
+        console.log("Button pressed");
+        // add sound here later
       });
     });
-
-    document.getElementById('pause-btn').onclick = () => alert("Paused");
   </script>
 </body>
-</html>
+  </html>
