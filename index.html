@@ -11,19 +11,19 @@
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
     button:active { background:#006; transform:scale(0.96); }
-    #status { font-size:1.4rem; margin-top:30px; color:#0f0; }
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
-    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2); max-height:58vh; background:#000; border:3px solid #444; border-bottom:8px solid #444; image-rendering:pixelated; }
+    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:62vh; background:#000; border:3px solid #444; border-bottom:10px solid #555; image-rendering:pixelated; }
     #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
     #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
-    #controller { height:42vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:space-between; align-items:center; padding:0 25px 15px; }
+    #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:space-between; align-items:center; padding:0 25px 15px; }
     .btn { width:clamp(100px,22vw,140px); height:clamp(100px,22vw,140px); background:#3a3a3a; border:5px solid #777; border-radius:50%; color:white; font-size:clamp(2.8rem,8vw,4rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
     .btn:active { background:#666; transform:scale(0.92); }
     .dpad { width:48%; display:flex; flex-direction:column; align-items:center; gap:12px; }
     .row { display:flex; gap:12px; }
     .actions { width:48%; display:flex; flex-direction:column; align-items:center; gap:30px; }
     #pause-overlay h2 { font-size:clamp(4rem,18vw,8rem); color:#ff4444; text-shadow:0 0 30px #f00; }
+    #debug { position:absolute; bottom:10px; left:10px; font-size:1rem; color:#0f0; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:4px; z-index:10; }
   </style>
 </head>
 <body>
@@ -32,7 +32,6 @@
   <h1>GridFlow</h1>
   <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
   <button id="start-game-btn">START GAME</button>
-  <div id="start-status" style="margin-top:40px; font-size:1.2rem; color:#ff0;"></div>
 </div>
 
 <div id="difficulty" class="hidden">
@@ -40,7 +39,6 @@
   <button id="easy-btn">EASY</button>
   <button id="medium-btn">MEDIUM</button>
   <button id="extreme-btn">EXTREME</button>
-  <div id="diff-status" style="margin-top:40px; font-size:1.2rem; color:#0f0;"></div>
 </div>
 
 <div id="game" class="hidden">
@@ -48,6 +46,7 @@
     <div id="pause-btn">P</div>
     <canvas id="canvas"></canvas>
     <div id="next-preview"><canvas id="next-canvas" width="90" height="90"></canvas></div>
+    <div id="debug">Loading...</div>
   </div>
 
   <div id="controller">
@@ -77,6 +76,7 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const nextCtx = document.getElementById('next-canvas').getContext('2d');
+const debug = document.getElementById('debug');
 
 let BLOCK = 0;
 let board = Array(20).fill().map(() => Array(10).fill(0));
@@ -117,6 +117,7 @@ function spawnPiece() {
   };
   nextPieceType = Math.floor(Math.random()*7)+1;
   dropTimer = 0;
+  debug.textContent = 'Piece spawned at y=' + currentPiece.y;
 }
 
 function collides() {
@@ -148,6 +149,7 @@ function merge() {
 function lockPiece() {
   merge();
   spawnPiece();
+  debug.textContent = 'Locked! New piece spawning...';
 }
 
 function move(dx) {
@@ -162,7 +164,10 @@ function rotate() {
 }
 
 function update(time = 0) {
-  if (paused) return requestAnimationFrame(update);
+  if (paused) {
+    debug.textContent = 'PAUSED';
+    return requestAnimationFrame(update);
+  }
 
   const dt = time - lastTime;
   lastTime = time;
@@ -171,6 +176,7 @@ function update(time = 0) {
   dropTimer += dt;
   if (dropTimer > speed) {
     currentPiece.y++;
+    debug.textContent = 'Falling... y=' + currentPiece.y.toFixed(1);
     if (collides()) {
       currentPiece.y--;
       lockPiece();
@@ -233,24 +239,15 @@ function draw() {
   }
 }
 
-// ─── Button events with debug feedback ────────────────────────
-function showStartFeedback(msg, color = '#0f0') {
-  const el = document.getElementById('start-status') || document.createElement('div');
-  el.id = 'start-status';
-  el.style.marginTop = '40px';
-  el.style.fontSize = '1.2rem';
-  el.style.color = color;
-  el.textContent = msg;
-  document.getElementById('start-screen').appendChild(el);
-}
+resize();
+spawnPiece();
 
+// Start flow
 document.getElementById('start-game-btn').addEventListener('click', startClick);
 document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
 
 function startClick(e) {
   e.preventDefault();
-  e.stopPropagation();
-  showStartFeedback('START pressed → loading difficulty...', '#0f0');
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('difficulty').classList.remove('hidden');
 }
@@ -259,9 +256,10 @@ function begin() {
   document.getElementById('difficulty').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   resize();
+  spawnPiece();
   draw();
   requestAnimationFrame(update);
-  alert('Game started! Piece should fall now.'); // debug popup to confirm
+  debug.textContent = 'Game started! Piece falling...';
 }
 
 document.getElementById('easy-btn').addEventListener('click', begin);
@@ -273,7 +271,7 @@ document.getElementById('medium-btn').addEventListener('touchstart', e => { e.pr
 document.getElementById('extreme-btn').addEventListener('click', begin);
 document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
-// Controls (same as before)
+// Controls
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
@@ -293,12 +291,14 @@ document.getElementById('pause-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = !paused;
   document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
+  debug.textContent = paused ? 'PAUSED' : 'Running';
 });
 
 document.getElementById('resume-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = false;
   document.getElementById('pause-overlay').classList.add('hidden');
+  debug.textContent = 'Resumed';
 });
 </script>
 </body>
