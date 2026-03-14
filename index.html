@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tetris • Dark Mode</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-dark: #000000;
+      --text: #e0e0e0;
+      --text-dim: #a0a0a0;
+      --accent: #00d4ff;
+      --accent-dark: #0099bb;
+      --panel: #1a1a1a;
+      --border: #333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0d0d0d 0%, #000 100%);
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 4.2rem;
+      font-weight: 900;
+      letter-spacing: -4px;
+      background: linear-gradient(90deg, #00d4ff, #ff00aa, #00d4ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      background-size: 200% auto;
+      animation: shine 6s linear infinite;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 30px rgba(0,212,255,0.4);
+    }
+
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+
+    .menu {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 1.8rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7),
+                  inset 0 0 20px rgba(0,212,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 1.1rem;
+      margin: 1rem 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      border: 2px solid var(--accent-dark);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-item:hover {
+      color: white;
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0,212,255,0.25);
+    }
+
+    .menu-item:active {
+      transform: translateY(-1px);
+    }
+
+    .creator {
+      margin-top: 3.5rem;
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+
+    .creator strong {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 15px rgba(0,212,255,0.5);
+    }
+
+    /* Simple particles background (optional) */
+    #particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.15;
+    }
+
+    @media (max-width: 500px) {
+      h1 { font-size: 3.6rem; letter-spacing: -3px; }
+      .menu { padding: 2rem 1.2rem; }
+      .menu-item { font-size: 1.3rem; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="particles"></div>
+
+  <div class="container">
+    <h1>TETRIS</h1>
+
+    <div class="menu">
+      <button class="menu-item" id="start">START GAME</button>
+      <button class="menu-item" id="levels">LEVELS</button>
+      <button class="menu-item" id="settings">SETTINGS</button>
+      <button class="menu-item" id="credits">CREDITS</button>
+    </div>
+
+    <div class="creator">
+      MADE WITH ♡ BY <strong>ꜱᴀᴍᴍɪᴇ</strong>
+    </div>
+  </div>
+
+  <script>
+    // Basic button click feedback (you'll replace these later)
+    document.getElementById('start').addEventListener('click', () => {
+      alert("Game starting soon... (game logic goes here)");
+      // window.location.href = "game.html";  ← later
+    });
+
+    document.getElementById('levels').addEventListener('click', () => {
+      alert("Choose your starting level (to be implemented)");
+    });
+
+    document.getElementById('settings').addEventListener('click', () => {
+      alert("Settings: sound, controls, ghost piece... (coming soon)");
+    });
+
+    document.getElementById('credits').addEventListener('click', () => {
+      alert("Tetris by ꜱᴀᴍᴍɪᴇ • 2025\nInspired by classic gameplay");
+    });
+
+    // Optional: very simple background particles
+    function createParticle() {
+      const p = document.createElement('div');
+      p.style.position = 'absolute';
+      p.style.background = 'rgba(0,212,255,0.7)';
+      p.style.borderRadius = '50%';
+      p.style.pointerEvents = 'none';
+      const size = Math.random() * 3 + 1;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.top = '-10px';
+      p.style.animation = `fall ${Math.random() * 15 + 10}s linear forwards`;
+      document.getElementById('particles').appendChild(p);
+      setTimeout(() => p.remove(), 20000);
+    }
+
+    setInterval(createParticle, 400);
+  </script>
+
+  <style>
+    @keyframes fall {
+      to {
+        transform: translateY(110vh);
+        opacity: 0;
+      }
+    }
+  </style>
+
+</body>
+  </html>
