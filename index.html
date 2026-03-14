@@ -1,65 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GridFlow Debug – by ꜱᴀᴍᴍɪᴇ</title>
+  <title>GridFlow – by ꜱᴀᴍᴍɪᴇ</title>
   <style>
-    body {
-      margin:0; padding:0; height:100vh; background:#000; overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee;
+    :root {
+      --bg: #0a0a0a;
+      --grid-bg: #000;
+      --grid-line: #222;
     }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { height:100vh; background:var(--bg); overflow:hidden; touch-action:none; color:#eee; font-family:sans-serif; }
+
     #menu, #difficulty-screen {
-      position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:20;
+      position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:20;
       display:flex; flex-direction:column; justify-content:center; align-items:center;
     }
     .hidden { display:none !important; }
 
-    button {
-      width:80%; max-width:340px; padding:18px; margin:12px 0;
-      font-size:22px; background:#222; border:3px solid #666; color:#eee; border-radius:12px;
-    }
-    button:active { background:#006699; }
+    h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#00eaff,#ff00d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .creator { font-size:1.8rem; color:#555; margin:20px 0 50px; }
 
-    #game-container {
-      height:100vh; display:flex; flex-direction:column;
+    button {
+      width:80%; max-width:360px; padding:20px; margin:15px 0;
+      font-size:24px; background:#222; border:3px solid #555; color:#eee; border-radius:12px;
     }
+    button:active { background:#006699; transform:scale(0.97); }
+
+    #game-container { height:100vh; display:flex; flex-direction:column; }
 
     #game-area {
-      flex:1; background:#000; position:relative; pointer-events:none;
+      flex:1; position:relative; background:#000; pointer-events:none;
     }
 
     #game-board {
-      width:60vw; max-width:380px; height:80vh; max-height:600px;
-      background:#000; border:3px solid #444;
+      width:60vw; max-width:380px; height:85vh; max-height:650px;
+      background:var(--grid-bg); border:4px solid #444;
       image-rendering:pixelated;
     }
 
+    #next-box {
+      position:absolute; right:15px; top:15px;
+      width:100px; height:100px;
+      background:#0f0f1a; border:2px solid #555; border-radius:8px;
+    }
+
+    #pause-btn {
+      position:absolute; top:15px; left:15px;
+      width:50px; height:50px;
+      background:rgba(240,180,0,0.9); border:3px solid #ff0; border-radius:50%;
+      color:white; font-size:1.8rem;
+      display:flex; align-items:center; justify-content:center;
+      z-index:10;
+    }
+
     #controller-area {
-      height:45vh; background:#111; border-top:4px solid #444;
-      display:flex; justify-content:space-around; align-items:center; padding:0 20px;
+      height:45vh; background:#0d0d0d; border-top:4px solid #444;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:0 30px 20px;
     }
 
     .ctrl-btn {
-      width:110px; height:110px; min-width:100px; min-height:100px;
-      background:#444; border:5px solid #888; border-radius:50%;
-      color:white; font-size:40px; font-weight:bold;
+      width: clamp(120px, 26vw, 160px);
+      height: clamp(120px, 26vw, 160px);
+      background:#444; border:6px solid #888; border-radius:50%;
+      color:white; font-size: clamp(3.5rem, 10vw, 5rem);
       display:flex; align-items:center; justify-content:center;
-      box-shadow:0 6px 16px rgba(0,0,0,0.7);
+      box-shadow:0 8px 20px rgba(0,0,0,0.8);
       touch-action:manipulation;
     }
-    .ctrl-btn:active { background:#777; transform:scale(0.92); }
+    .ctrl-btn:active { background:#777; transform:scale(0.9); }
+
+    .dpad { display:flex; flex-direction:column; align-items:center; gap:20px; width:45%; }
+    .cross { display:flex; flex-wrap:wrap; justify-content:center; width:100%; }
+    .cross div { flex:0 0 33%; text-align:center; }
+
+    .actions { display:flex; flex-direction:column; align-items:center; gap:40px; width:45%; }
   </style>
 </head>
 <body>
 
   <div id="menu">
-    <h1 style="font-size:80px; margin-bottom:20px; color:#0ff; text-shadow:0 0 30px #0ff;">GridFlow</h1>
-    <p style="margin-bottom:40px;">by ꜱᴀᴍᴍɪᴇ</p>
+    <h1>GridFlow</h1>
+    <div class="creator">ꜱᴀᴍᴍɪᴇ</div>
     <button id="start">START GAME</button>
+    <button id="settings">SETTINGS</button>
+    <button id="help">HELP</button>
+    <button id="credits">CREDITS</button>
   </div>
 
   <div id="difficulty-screen" class="hidden">
-    <h2 style="font-size:50px; color:#0ff; margin-bottom:40px;">Choose Difficulty</h2>
+    <h2 style="font-size:60px; color:#0ff;">CHOOSE LEVEL</h2>
     <button id="easy">EASY</button>
     <button id="medium">MEDIUM</button>
     <button id="extreme">EXTREME</button>
@@ -67,18 +99,35 @@
 
   <div id="game-container" class="hidden">
     <div id="game-area">
+      <div id="pause-btn">P</div>
       <canvas id="game-board"></canvas>
+      <div id="next-box"><canvas id="next-canvas" width="100" height="100"></canvas></div>
     </div>
+
     <div id="controller-area">
-      <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
-        <div class="ctrl-btn">←</div>
-        <div class="ctrl-btn">→</div>
-        <div class="ctrl-btn">↓</div>
-        <div class="ctrl-btn">↑</div>
+      <!-- Left joystick style D-pad -->
+      <div class="dpad">
+        <div class="cross">
+          <div></div>
+          <div class="ctrl-btn" id="up">↑</div>
+          <div></div>
+        </div>
+        <div class="cross">
+          <div class="ctrl-btn" id="left">←</div>
+          <div></div>
+          <div class="ctrl-btn" id="right">→</div>
+        </div>
+        <div class="cross">
+          <div></div>
+          <div class="ctrl-btn" id="down">↓</div>
+          <div></div>
+        </div>
       </div>
-      <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
-        <div class="ctrl-btn">Z</div>
-        <div class="ctrl-btn" style="width:140px; height:140px; font-size:60px;">▼</div>
+
+      <!-- Right actions -->
+      <div class="actions">
+        <div class="ctrl-btn" id="rotate-ccw">Z</div>
+        <div class="ctrl-btn" id="hard" style="width:180px;height:180px;font-size:70px;">▼</div>
       </div>
     </div>
   </div>
@@ -88,27 +137,26 @@
     const ctx = canvas.getContext('2d');
 
     let BLOCK = 0;
+    let pieceY = 0;
 
-    function resizeCanvas() {
+    function resize() {
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
-      BLOCK = Math.max(34, Math.floor(w / 10));  // min 34px so lines visible
+      BLOCK = Math.max(40, Math.floor(w / 10)); // bigger min size
 
       canvas.width = w * dpr;
       canvas.height = canvas.clientHeight * dpr;
       ctx.scale(dpr, dpr);
-
-      console.log(`Canvas ready: ${canvas.width}x${canvas.height}px, BLOCK = ${BLOCK}px`);
-      drawDebug();
+      draw();
     }
 
-    function drawDebug() {
+    function draw() {
       ctx.fillStyle = '#000022';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Grid lines - must be visible
+      // Grid lines - thick and visible
       ctx.strokeStyle = '#444';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2;
       for (let i = 0; i <= 10; i++) {
         ctx.beginPath();
         ctx.moveTo(i * BLOCK, 0);
@@ -122,20 +170,22 @@
         ctx.stroke();
       }
 
-      // Big cyan test block in center
+      // Falling test piece (cyan I)
       ctx.fillStyle = '#00FFFF';
-      ctx.fillRect(3 * BLOCK, 8 * BLOCK, 4 * BLOCK, BLOCK);
+      ctx.fillRect(3 * BLOCK, pieceY * BLOCK, 4 * BLOCK, BLOCK);
       ctx.strokeStyle = '#008888';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(3 * BLOCK, 8 * BLOCK, 4 * BLOCK, BLOCK);
+      ctx.lineWidth = 4;
+      ctx.strokeRect(3 * BLOCK, pieceY * BLOCK, 4 * BLOCK, BLOCK);
 
-      console.log("Debug draw called - should see grid + cyan bar");
+      // Next preview test (yellow O)
+      nextCtx.fillStyle = '#001122';
+      nextCtx.fillRect(0, 0, 100, 100);
+      nextCtx.fillStyle = '#FFFF00';
+      nextCtx.fillRect(20, 20, 60, 60);
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('resize', resize);
 
-    // Start flow
     document.getElementById('start').onclick = () => {
       document.getElementById('menu').classList.add('hidden');
       document.getElementById('difficulty-screen').classList.remove('hidden');
@@ -144,22 +194,26 @@
     function startGame() {
       document.getElementById('difficulty-screen').classList.add('hidden');
       document.getElementById('game-container').classList.remove('hidden');
-      resizeCanvas();          // re-apply after show
-      drawDebug();             // force immediate draw
-      setInterval(drawDebug, 2000); // keep drawing to confirm loop
-      console.log("Game area should now be visible");
+      resize();
+      draw();
+      pieceY = 0;
+      setInterval(() => {
+        pieceY = (pieceY + 1) % 20;
+        draw();
+      }, 800); // simple falling animation
     }
 
     document.getElementById('easy').onclick = startGame;
     document.getElementById('medium').onclick = startGame;
     document.getElementById('extreme').onclick = startGame;
 
-    // Controller sound test
+    // Controller response test
     document.querySelectorAll('.ctrl-btn').forEach(btn => {
       btn.addEventListener('touchstart', e => {
         e.preventDefault();
-        console.log("Button pressed");
-        // add sound here later
+        btn.style.background = '#888';
+        setTimeout(() => btn.style.background = '#444', 100);
+        console.log(btn.id + ' pressed');
       });
     });
   </script>
