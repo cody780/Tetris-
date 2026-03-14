@@ -5,33 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>GridFlow – by ꜱᴀᴍᴍɪᴇ</title>
   <style>
-    body { margin:0; height:100vh; background:#000; overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
-    #start-screen, #difficulty, #pause-overlay { position:fixed; inset:0; z-index:100; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    :root {
+      --bg: #0a0a0a;
+      --grid: #000;
+      --line: #222;
+    }
+    body { margin:0; height:100vh; background:var(--bg); overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
+    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; z-index:100; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; }
     .hidden { display:none !important; }
-    h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px #0ff8; }
     button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
     button:active { background:#006; transform:scale(0.96); }
     #game { height:100vh; display:flex; flex-direction:column; }
-    #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
-    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.05); max-height:62vh; background:#000; border:3px solid #444; border-bottom:10px solid #555; image-rendering:pixelated; }
+    #play-area { flex:1; position:relative; background:var(--grid); display:flex; justify-content:center; align-items:center; pointer-events:none; }
+    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.05); max-height:62vh; background:var(--grid); border:3px solid #444; border-bottom:12px solid #555; image-rendering:pixelated; }
     #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
     #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
-    #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:space-between; align-items:center; padding:0 25px 15px; }
+    #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; }
+    .dpad { display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:12px; width:clamp(320px,70vw,420px); height:clamp(320px,70vw,420px); place-items:center; }
     .btn { width:clamp(100px,22vw,140px); height:clamp(100px,22vw,140px); background:#3a3a3a; border:5px solid #777; border-radius:50%; color:white; font-size:clamp(2.8rem,8vw,4rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
     .btn:active { background:#666; transform:scale(0.92); }
-    .dpad { width:48%; display:flex; flex-direction:column; align-items:center; gap:12px; }
-    .row { display:flex; gap:12px; }
-    .actions { width:48%; display:flex; flex-direction:column; align-items:center; gap:30px; }
-    #pause-overlay h2 { font-size:clamp(4rem,18vw,8rem); color:#ff4444; text-shadow:0 0 30px #f00; }
-    #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.3rem; color:#0ff; z-index:5; }
+    #center { grid-area:2 / 2 / 3 / 3; }
+    #pause-overlay h2, #game-over h2 { font-size:clamp(4rem,18vw,8rem); text-shadow:0 0 30px; }
+    #game-over h2 { color:#ff4444; text-shadow:0 0 30px #f00; }
+    #score-board { font-size:1.6rem; color:#0ff; text-shadow:0 0 15px #0ff8; font-weight:bold; animation:scoreflash 1.5s infinite alternate; }
+    @keyframes scoreflash { from { opacity:0.7; } to { opacity:1; } }
   </style>
 </head>
 <body>
 
-<div id="start-screen">
+<div id="menu">
   <h1>GridFlow</h1>
   <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
   <button id="start-game-btn">START GAME</button>
+  <button id="settings-btn">SETTINGS</button>
+  <button id="help-btn">HELP</button>
+  <button id="credits-btn">CREDITS</button>
 </div>
 
 <div id="difficulty" class="hidden">
@@ -45,7 +54,7 @@
   <div id="play-area">
     <div id="hud">
       <div>Score: <span id="score">0</span></div>
-      <div>Level: <span id="level">1</span></div>
+      <div id="score-board">Level: <span id="level">1</span></div>
     </div>
     <div id="pause-btn">P</div>
     <canvas id="canvas"></canvas>
@@ -54,17 +63,9 @@
 
   <div id="controller">
     <div class="dpad">
-      <div class="row"><button class="btn" id="rotate-cw">↑</button></div>
-      <div class="row">
-        <button class="btn" id="move-left">←</button>
-        <button class="btn" id="soft-drop">↓</button>
-        <button class="btn" id="move-right">→</button>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn" id="rotate-ccw">Z</button>
-      <button class="btn" id="hard-drop" style="width:160px;height:160px;font-size:60px;">▼</button>
+      <div></div><button class="btn" id="rotate-cw">↑</button><div></div>
+      <button class="btn" id="move-left">←</button><div></div><button class="btn" id="move-right">→</button>
+      <div></div><button class="btn" id="soft-drop">↓</button><div></div>
     </div>
   </div>
 </div>
@@ -74,20 +75,19 @@
   <button id="resume-btn">RESUME</button>
 </div>
 
+<div id="game-over" class="hidden">
+  <div style="font-size:clamp(8rem,40vw,12rem);">🧸</div>
+  <h2 style="margin:20px 0;">Such a loser...</h2>
+  <div style="font-size:2rem; color:#ff0;">Final Score: <span id="final-score">0</span></div>
+  <button id="restart-btn" style="margin-top:40px;">TRY AGAIN</button>
+</div>
+
 <!-- Audio -->
 <audio id="bg-music" loop preload="auto"></audio>
-<audio id="move-sfx" preload="auto">
-  <source src="https://assets.codepen.io/243235/move-click.mp3" type="audio/mpeg">
-</audio>
-<audio id="rotate-sfx" preload="auto">
-  <source src="https://assets.codepen.io/243235/rotate-click.mp3" type="audio/mpeg">
-</audio>
-<audio id="drop-sfx" preload="auto">
-  <source src="https://assets.codepen.io/243235/drop.mp3" type="audio/mpeg">
-</audio>
-<audio id="line-sfx" preload="auto">
-  <source src="https://assets.codepen.io/243235/clear-line.mp3" type="audio/mpeg">
-</audio>
+<audio id="move-sfx" preload="auto"><source src="https://assets.codepen.io/243235/move-click.mp3" type="audio/mpeg"></audio>
+<audio id="rotate-sfx" preload="auto"><source src="https://assets.codepen.io/243235/rotate-click.mp3" type="audio/mpeg"></audio>
+<audio id="drop-sfx" preload="auto"><source src="https://assets.codepen.io/243235/drop.mp3" type="audio/mpeg"></audio>
+<audio id="line-sfx" preload="auto"><source src="https://assets.codepen.io/243235/clear-line.mp3" type="audio/mpeg"></audio>
 
 <script>
 // ────────────────────────────────────────────────
@@ -111,6 +111,7 @@ let paused = false;
 let softDrop = false;
 let score = 0;
 let level = 1;
+let gameOver = false;
 
 const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
@@ -177,7 +178,7 @@ function clearLines() {
       board.splice(y, 1);
       board.unshift(Array(10).fill(0));
       lines++;
-      y++; // re-check same row after shift
+      y++;
     }
   }
   if (lines > 0) {
@@ -185,6 +186,8 @@ function clearLines() {
     document.getElementById('score').textContent = score;
     lineSfx.currentTime = 0;
     lineSfx.play().catch(() => {});
+    level = Math.floor(score / 5000) + 1;
+    document.getElementById('level').textContent = level;
   }
 }
 
@@ -192,6 +195,17 @@ function lockPiece() {
   merge();
   clearLines();
   spawnPiece();
+  dropSfx.currentTime = 0;
+  dropSfx.play().catch(() => {});
+  if (collides()) gameOverFunc();
+}
+
+function gameOverFunc() {
+  gameOver = true;
+  paused = true;
+  document.getElementById('game-over').classList.remove('hidden');
+  document.getElementById('final-score').textContent = score;
+  bgMusic.pause();
 }
 
 function move(dx) {
@@ -214,20 +228,19 @@ function rotate() {
 }
 
 function update(time = 0) {
-  if (paused) return requestAnimationFrame(update);
+  if (paused || gameOver) return requestAnimationFrame(update);
 
   const dt = time - lastTime;
   lastTime = time;
 
-  const speed = softDrop ? 60 : 800;
+  const baseSpeed = level === 1 ? 800 : 800 - (level-1)*60;
+  const speed = softDrop ? 60 : baseSpeed;
   dropTimer += dt;
   if (dropTimer > speed) {
     currentPiece.y++;
     if (collides()) {
       currentPiece.y--;
       lockPiece();
-      dropSfx.currentTime = 0;
-      dropSfx.play().catch(() => {});
     }
     dropTimer = 0;
   }
@@ -254,19 +267,14 @@ function draw() {
       if (val) {
         const px = x*BLOCK;
         const py = y*BLOCK;
-        // Base color
         ctx.fillStyle = COLORS[val];
         ctx.fillRect(px, py, BLOCK, BLOCK);
-
-        // Shine gradient
         const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
-        grad.addColorStop(0, 'rgba(255,255,255,0.45)');
-        grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+        grad.addColorStop(0, 'rgba(255,255,255,0.5)');
+        grad.addColorStop(0.4, 'rgba(255,255,255,0.2)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.4)');
         ctx.fillStyle = grad;
         ctx.fillRect(px, py, BLOCK, BLOCK);
-
-        // Border
         ctx.strokeStyle = '#111';
         ctx.lineWidth = 2;
         ctx.strokeRect(px, py, BLOCK, BLOCK);
@@ -279,14 +287,14 @@ function draw() {
     currentPiece.shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
         if (val) {
-          const px = (currentPiece.x + dx) * BLOCK;
-          const py = (currentPiece.y + dy) * BLOCK;
+          const px = (currentPiece.x + dx)*BLOCK;
+          const py = (currentPiece.y + dy)*BLOCK;
           if (currentPiece.y + dy >= 0) {
             ctx.fillRect(px, py, BLOCK, BLOCK);
             const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
-            grad.addColorStop(0, 'rgba(255,255,255,0.45)');
-            grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+            grad.addColorStop(0, 'rgba(255,255,255,0.5)');
+            grad.addColorStop(0.4, 'rgba(255,255,255,0.2)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.4)');
             ctx.fillStyle = grad;
             ctx.fillRect(px, py, BLOCK, BLOCK);
             ctx.strokeStyle = '#111';
@@ -315,54 +323,40 @@ function draw() {
 resize();
 spawnPiece();
 
-// Audio setup
+// Audio
 bgMusic.src = "https://cdn.pixabay.com/download/audio/2023/08/07/audio_8b9d7d7e3a.mp3?filename=calm-piano-ambient-122456.mp3";
 bgMusic.volume = 0.25;
-bgMusic.loop = true;
 
 // Start flow
-document.getElementById('start-game-btn').addEventListener('click', startClick);
-document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
-
-function startClick(e) {
+document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('difficulty').classList.remove('hidden');
-}
+});
 
-function begin() {
+function begin(diff) {
   document.getElementById('difficulty').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   resize();
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-
-  // Start music after user gesture
-  bgMusic.play().catch(() => {
-    console.log("Music play blocked - waiting for gesture");
-  });
+  bgMusic.play().catch(() => {});
 }
 
-document.getElementById('easy-btn').addEventListener('click', begin);
-document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
-
-document.getElementById('medium-btn').addEventListener('click', begin);
-document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
-
-document.getElementById('extreme-btn').addEventListener('click', begin);
-document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('easy'); });
+document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('medium'); });
+document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('extreme'); });
 
 // Controls
-document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
-document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
+document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused) move(-1); });
+document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused) move(1); });
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
 document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
-document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
-document.getElementById('ccw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
+document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused) rotate(); });
 document.getElementById('hard-drop').addEventListener('touchstart', e => {
   e.preventDefault();
-  if (!paused && currentPiece) {
+  if (!paused) {
     while (!collides()) currentPiece.y++;
     currentPiece.y--;
     lockPiece();
@@ -384,4 +378,4 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-                         </html>
+</html>
