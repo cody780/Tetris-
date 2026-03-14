@@ -5,21 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>GridFlow – by ꜱᴀᴍᴍɪᴇ</title>
   <style>
-    :root {
-      --bg: #0a0a0a;
-      --grid: #000;
-      --line: #222;
-    }
-    body { margin:0; height:100vh; background:var(--bg); overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
-    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; z-index:100; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    body { margin:0; height:100vh; background:#000; overflow:hidden; touch-action:none; font-family:sans-serif; color:#eee; }
+    #menu, #difficulty, #pause-overlay, #game-over { position:fixed; inset:0; background:#000d; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; visibility:hidden; }
+    #menu.visible, #difficulty.visible, #pause-overlay.visible, #game-over.visible { visibility:visible; }
     .hidden { display:none !important; }
     h1 { font-size: clamp(5rem, 20vw, 10rem); background:linear-gradient(90deg,#0ff,#f0f); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 40px #0ff8; }
-    button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; transition:all 0.15s; }
-    button:active { background:#006; transform:scale(0.96); box-shadow:0 0 20px #0ff8; }
+    button { width:80%; max-width:340px; padding:20px; margin:12px 0; font-size:22px; background:#222; border:3px solid #555; color:#eee; border-radius:10px; cursor:pointer; }
+    button:active { background:#006; transform:scale(0.96); }
     #start-feedback { font-size:1.4rem; margin-top:40px; color:#0f0; text-align:center; }
     #game { height:100vh; display:flex; flex-direction:column; }
-    #play-area { flex:1; position:relative; background:var(--grid); display:flex; justify-content:center; align-items:center; pointer-events:none; }
-    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:65vh; background:var(--grid); border:3px solid #444; border-bottom:14px solid #555; image-rendering:pixelated; }
+    #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
+    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:65vh; background:#000; border:3px solid #444; border-bottom:14px solid #555; image-rendering:pixelated; }
     #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
     #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { height:38vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; }
@@ -35,7 +31,7 @@
 </head>
 <body>
 
-<div id="menu">
+<div id="menu" class="visible">
   <h1>GridFlow</h1>
   <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
   <button id="start-game-btn">START GAME</button>
@@ -45,7 +41,7 @@
   <div id="start-feedback"></div>
 </div>
 
-<div id="difficulty" class="hidden">
+<div id="difficulty">
   <h2 style="font-size:clamp(3rem,14vw,5.5rem); color:#0ff; margin-bottom:50px;">LEVEL</h2>
   <button id="easy-btn">EASY</button>
   <button id="medium-btn">MEDIUM</button>
@@ -129,7 +125,7 @@ function resize() {
   BLOCK = Math.max(36, Math.floor(w / 10));
 
   canvas.width = w * dpr;
-  canvas.height = (w * 2.1) * dpr; // extra height for bottom visibility
+  canvas.height = (w * 2.1) * dpr;
   ctx.scale(dpr, dpr);
   draw();
 }
@@ -325,37 +321,40 @@ function draw() {
 resize();
 spawnPiece();
 
-// ─── Start flow with extra reliability ────────────────────────
-document.getElementById('start-game-btn').addEventListener('click', startClick);
-document.getElementById('start-game-btn').addEventListener('touchstart', startClick);
-
-function startClick(e) {
+// Start flow
+document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
-  e.stopPropagation();
-  document.getElementById('start-feedback').textContent = 'START pressed → loading...';
+  document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
   document.getElementById('start-feedback').style.color = '#0f0';
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('difficulty').classList.remove('hidden');
-}
+  document.getElementById('menu').classList.add('hidden');
+  setTimeout(() => {
+    document.getElementById('difficulty').classList.remove('hidden');
+  }, 100); // small delay for browser to reflow
+});
 
-function begin(diff) {
+document.getElementById('start-game-btn').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('start-feedback').textContent = 'START pressed (click) → loading...';
+  document.getElementById('start-feedback').style.color = '#ff0';
+  document.getElementById('menu').classList.add('hidden');
+  setTimeout(() => {
+    document.getElementById('difficulty').classList.remove('hidden');
+  }, 100);
+});
+
+function begin() {
   document.getElementById('difficulty').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
   resize();
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-  bgMusic.play().catch(() => console.log("Music needs gesture"));
+  bgMusic.play().catch(() => {});
 }
 
-document.getElementById('easy-btn').addEventListener('click', begin);
-document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('easy'); });
-
-document.getElementById('medium-btn').addEventListener('click', begin);
-document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('medium'); });
-
-document.getElementById('extreme-btn').addEventListener('click', begin);
-document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin('extreme'); });
+document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('medium-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
+document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
 // Controls (unchanged)
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
@@ -363,15 +362,6 @@ document.getElementById('move-right').addEventListener('touchstart', e => { e.pr
 document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
 document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
 document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
-document.getElementById('hard-drop').addEventListener('touchstart', e => {
-  e.preventDefault();
-  if (!paused && currentPiece) {
-    while (!collides()) currentPiece.y++;
-    currentPiece.y--;
-    lockPiece();
-  }
-});
-
 document.getElementById('pause-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = !paused;
@@ -387,4 +377,4 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-  </html>
+  </html
