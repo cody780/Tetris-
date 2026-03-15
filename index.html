@@ -27,7 +27,7 @@
     #canvas { 
       width: 94vw; 
       max-width: 480px; 
-      height: calc(94vw * 1.92); 
+      height: calc(94vw * 1.88);   /* ← tweaked slightly taller feel, less squish */
       max-height: 56vh; 
       background:#000; 
       border:3px solid #444; 
@@ -38,20 +38,20 @@
     #pause-btn { position:absolute; top:4vw; left:4vw; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
       flex: 1 0 auto; 
-      min-height: 34vh;           /* reduced to help fit better */
+      min-height: 34vh; 
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
       justify-content:center; 
       align-items:center; 
-      padding: 8px 0; 
+      padding: 6px 0;             /* ← tiny reduction */
       box-sizing: border-box;
     }
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
-      gap:7px;                    /* tighter gap */
+      gap:9px;                    /* ← back to 9px for better spacing */
       width:clamp(300px, 82vw, 420px); 
       height:clamp(300px, 82vw, 420px); 
       place-items:center; 
@@ -297,8 +297,8 @@ function startMove(direction) {
   moveDelayTimer = setTimeout(() => {
     moveInterval = setInterval(() => {
       if (!paused && currentPiece) move(moveDirection);
-    }, 100); // repeat every 100ms after delay
-  }, 300); // initial delay 300ms
+    }, 100);
+  }, 300);
 }
 
 function stopMove() {
@@ -436,8 +436,7 @@ function draw() {
 resize();
 spawnPiece();
 
-// ─── Event listeners ─────────────────────────────────────
-
+// Event listeners (same as before)
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
