@@ -14,12 +14,21 @@
     button:active { background:#006; transform:scale(0.96); }
     #start-feedback { font-size:1.4rem; margin-top:40px; color:#0f0; text-align:center; }
     #game { height:100vh; display:flex; flex-direction:column; }
-    #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
+    #play-area { 
+      flex: 0 1 auto; 
+      max-height: 58vh;           /* ← key: cap vertical space for board */
+      position:relative; 
+      background:#000; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      padding: 8px 0; 
+    }
     #canvas { 
       width: 94vw; 
       max-width: 480px; 
-      height: calc(94vw * 2); 
-      max-height: 80vh; 
+      height: calc(94vw * 1.92);   /* slightly shorter than 2:1 to leave room */
+      max-height: 56vh; 
       background:#000; 
       border:3px solid #444; 
       border-bottom:14px solid #555; 
@@ -27,7 +36,17 @@
     }
     #next-preview { position:absolute; right:4vw; top:4vw; width:80px; height:80px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; z-index:5; }
     #pause-btn { position:absolute; top:4vw; left:4vw; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
-    #controller { height: auto; min-height: 40vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; padding: 10px 0; }
+    #controller { 
+      flex: 1 0 auto; 
+      min-height: 38vh;           /* ← ensures controls have enough space */
+      background:#0a0a0a; 
+      border-top:4px solid #333; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      padding: 10px 0; 
+      box-sizing: border-box;
+    }
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
@@ -143,16 +162,13 @@ const SHAPES = [
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   
-  // Set canvas CSS size first
-  const displayWidth = canvas.clientWidth;
+  const displayWidth = Math.min(canvas.parentElement.clientWidth * 0.94, 480);
   BLOCK = Math.floor(displayWidth / 10);
   
-  // Pixel-perfect canvas backing
   canvas.width = 10 * BLOCK * dpr;
   canvas.height = 20 * BLOCK * dpr;
   ctx.scale(dpr, dpr);
 
-  // Next preview also scales a bit
   nextCtx.canvas.width = 80 * dpr;
   nextCtx.canvas.height = 80 * dpr;
   nextCtx.scale(dpr, dpr);
@@ -314,7 +330,6 @@ function draw() {
   ctx.fillStyle = '#000011';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // thin grid
   ctx.strokeStyle = '#222';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 10; i++) {
@@ -324,7 +339,6 @@ function draw() {
     ctx.beginPath(); ctx.moveTo(0, i*BLOCK); ctx.lineTo(10*BLOCK, i*BLOCK); ctx.stroke();
   }
 
-  // board pieces
   board.forEach((row, y) => {
     row.forEach((val, x) => {
       if (val) {
@@ -341,7 +355,6 @@ function draw() {
     });
   });
 
-  // current piece
   if (currentPiece) {
     ctx.fillStyle = COLORS[currentPiece.type];
     currentPiece.shape.forEach((row, dy) => {
@@ -362,7 +375,6 @@ function draw() {
     });
   }
 
-  // next preview
   nextCtx.fillStyle = '#001122';
   nextCtx.fillRect(0,0,80,80);
   if (nextPieceType) {
@@ -381,8 +393,7 @@ function draw() {
 resize();
 spawnPiece();
 
-// ─── Event listeners ─────────────────────────────────────
-
+// Event listeners remain the same as before...
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
@@ -472,4 +483,4 @@ document.getElementById('restart-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-  </html>
+</html>
