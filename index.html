@@ -37,7 +37,7 @@
     #next-preview { position:absolute; right:3vw; top:3vw; width:70px; height:70px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; z-index:5; }
     #pause-btn { position:absolute; top:3vw; left:3vw; width:48px; height:48px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.8rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
-      flex: 0 0 26vh; 
+      flex: 0 0 24vh; 
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
@@ -45,6 +45,7 @@
       align-items:center; 
       padding: 6px; 
       box-sizing: border-box;
+      margin-top: -20px;               /* Raised the whole D-pad up */
     }
     .controls { 
       display: flex; 
@@ -319,29 +320,55 @@ window.addEventListener('load', function() {
   }
 
   function rotate(cw = true) {
+    if (!currentPiece) return;
+
     const oldShape = currentPiece.shape.map(r => r.slice());
+    const oldX = currentPiece.x;
+    const oldY = currentPiece.y;
+
     const w = oldShape[0].length;
     const h = oldShape.length;
     let newShape = Array(w).fill().map(() => Array(h).fill(0));
+
     if (cw) {
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) newShape[x][h - 1 - y] = oldShape[y][x];
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          newShape[x][h - 1 - y] = oldShape[y][x];
+        }
+      }
     } else {
-      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) newShape[w - 1 - x][y] = oldShape[y][x];
-    }
-    currentPiece.shape = newShape;
-    if (collides()) {
-      currentPiece.x += 1;
-      if (collides()) {
-        currentPiece.x -= 2;
-        if (collides()) {
-          currentPiece.x += 1;
-          currentPiece.shape = oldShape;
-          return;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          newShape[w - 1 - x][y] = oldShape[y][x];
         }
       }
     }
-    rotateSfx.currentTime = 0;
-    rotateSfx.play().catch(() => {});
+
+    currentPiece.shape = newShape;
+
+    // Wall kick tests (basic SRS)
+    const kicks = [
+      {x: 0,  y: 0},
+      {x: cw ? -1 : 1, y: 0},
+      {x: cw ? -1 : 1, y: -1},
+      {x: 0,  y: -2},
+      {x: cw ? -1 : 1, y: -2}
+    ];
+
+    for (const kick of kicks) {
+      currentPiece.x = oldX + kick.x;
+      currentPiece.y = oldY + kick.y;
+      if (!collides()) {
+        rotateSfx.currentTime = 0;
+        rotateSfx.play().catch(() => {});
+        return;
+      }
+    }
+
+    // Revert if no kick works
+    currentPiece.shape = oldShape;
+    currentPiece.x = oldX;
+    currentPiece.y = oldY;
   }
 
   function update(time = 0) {
@@ -496,4 +523,4 @@ window.addEventListener('load', function() {
 });
 </script>
 </body>
-</html>
+  </html>
