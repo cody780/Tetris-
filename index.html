@@ -23,7 +23,7 @@
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
-      gap:5px;                           /* ← changed to 9px as requested */
+      gap:9px;
       width:clamp(340px,75vw,440px); 
       height:clamp(340px,75vw,440px); 
       place-items:center; 
@@ -115,25 +115,32 @@ let dropTimer = 0;
 let lastTime = 0;
 let paused = false;
 let softDrop = false;
+let hardDropTriggered = false;
 let score = 0;
 let level = 1;
 let gameOver = false;
+let dropStartY = 0;           // for hard drop bonus
 
 const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
 const SHAPES = [
   null,
-  [[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]],
-  [[0,1,1],[1,1,0]], [[1,1,0],[0,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]]
+  [[1,1,1,1]],                // I
+  [[1,1],[1,1]],              // O
+  [[0,1,0],[1,1,1]],          // T
+  [[0,1,1],[1,1,0]],          // S
+  [[1,1,0],[0,1,1]],          // Z
+  [[1,0,0],[1,1,1]],          // J
+  [[0,0,1],[1,1,1]]           // L
 ];
 
 function resize() {
   const dpr = window.devicePixelRatio || 1;
-  const w = Math.min(window.innerWidth, window.innerHeight * 0.8);
-  BLOCK = Math.max(36, Math.floor(w / 10));
+  const w = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.55);
+  BLOCK = Math.floor(w / 10);
 
-  canvas.width = w * dpr;
-  canvas.height = (w * 2.1) * dpr;
+  canvas.width = 10 * BLOCK * dpr;
+  canvas.height = 20 * BLOCK * dpr;
   ctx.scale(dpr, dpr);
   draw();
 }
@@ -141,14 +148,20 @@ function resize() {
 window.addEventListener('resize', resize);
 
 function spawnPiece() {
+  const type = nextPieceType || Math.floor(Math.random()*7) + 1;
+  nextPieceType = Math.floor(Math.random()*7) + 1;
+
   currentPiece = {
-    type: nextPieceType || Math.floor(Math.random()*7)+1,
-    shape: SHAPES[nextPieceType || Math.floor(Math.random()*7)+1].map(r => r.slice()),
-    x: Math.floor(10/2) - 2,
+    type: type,
+    shape: SHAPES[type].map(r => r.slice()),
+    x: 3,               // classic center spawn (columns 3,4,5,6 for flat pieces)
     y: -2
   };
-  nextPieceType = Math.floor(Math.random()*7)+1;
+  dropStartY = currentPiece.y;
   dropTimer = 0;
+  hardDropTriggered = false;
+
+  if (collides()) gameOverFunc();
 }
 
 function collides() {
@@ -184,15 +197,16 @@ function clearLines() {
       board.splice(y, 1);
       board.unshift(Array(10).fill(0));
       lines++;
-      y++;
+      y++; // re-check same row after shift
     }
   }
   if (lines > 0) {
-    score += [0, 40, 100, 300, 1200][lines] * level;
+    const base = [0, 40, 100, 300, 1200][lines];
+    score += base * (level + 1);
     document.getElementById('score').textContent = score;
     lineSfx.currentTime = 0;
     lineSfx.play().catch(() => {});
-    level = Math.floor(score / 5000) + 1;
+    level = Math.floor(score / 10000) + 1; // slower level-up
     document.getElementById('level').textContent = level;
   }
 }
@@ -203,7 +217,13 @@ function lockPiece() {
   spawnPiece();
   dropSfx.currentTime = 0;
   dropSfx.play().catch(() => {});
-  if (collides()) gameOverFunc();
+
+  // hard drop bonus (classic = 2 points per cell dropped)
+  if (hardDropTriggered) {
+    const dist = currentPiece.y - dropStartY;
+    score += dist * 2;
+    document.getElementById('score').textContent = score;
+  }
 }
 
 function gameOverFunc() {
@@ -223,14 +243,44 @@ function move(dx) {
   }
 }
 
-function rotate() {
-  const old = currentPiece.shape.map(r => r.slice());
-  currentPiece.shape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
-  if (collides()) currentPiece.shape = old;
-  else {
-    rotateSfx.currentTime = 0;
-    rotateSfx.play().catch(() => {});
+function rotate(cw = true) {
+  const oldShape = currentPiece.shape.map(r => r.slice());
+  const w = oldShape[0].length;
+  const h = oldShape.length;
+
+  let newShape;
+  if (cw) {
+    newShape = Array(w).fill().map(() => Array(h).fill(0));
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        newShape[x][h - 1 - y] = oldShape[y][x];
+      }
+    }
+  } else {
+    newShape = Array(w).fill().map(() => Array(h).fill(0));
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        newShape[w - 1 - x][y] = oldShape[y][x];
+      }
+    }
   }
+
+  currentPiece.shape = newShape;
+
+  // simple wall/floor kick: try ±1 x
+  if (collides()) {
+    currentPiece.x += 1;
+    if (collides()) {
+      currentPiece.x -= 2;
+      if (collides()) {
+        currentPiece.x += 1; // back to original
+        currentPiece.shape = oldShape; // revert
+        return;
+      }
+    }
+  }
+  rotateSfx.currentTime = 0;
+  rotateSfx.play().catch(() => {});
 }
 
 function update(time = 0) {
@@ -239,9 +289,10 @@ function update(time = 0) {
   const dt = time - lastTime;
   lastTime = time;
 
-  const baseSpeed = level === 1 ? 800 : 800 - (level-1)*60;
-  const speed = softDrop ? 60 : baseSpeed;
+  const frameSpeed = Math.max(1, 800 - (level - 1) * 60); // slower ramp-up
+  const speed = softDrop ? 40 : frameSpeed;
   dropTimer += dt;
+
   if (dropTimer > speed) {
     currentPiece.y++;
     if (collides()) {
@@ -255,56 +306,74 @@ function update(time = 0) {
   requestAnimationFrame(update);
 }
 
+function hardDrop() {
+  if (!currentPiece || paused || gameOver) return;
+  hardDropTriggered = true;
+  while (!collides()) {
+    currentPiece.y++;
+  }
+  currentPiece.y--;
+  lockPiece();
+}
+
 function draw() {
   ctx.fillStyle = '#000011';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 2;
+  // grid
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
   for (let i = 0; i <= 10; i++) {
-    ctx.beginPath(); ctx.moveTo(i*BLOCK,0); ctx.lineTo(i*BLOCK,canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i*BLOCK,0); ctx.lineTo(i*BLOCK,canvas.height/BLOCK|0); ctx.stroke();
   }
   for (let i = 0; i <= 20; i++) {
-    ctx.beginPath(); ctx.moveTo(0,i*BLOCK); ctx.lineTo(canvas.width,i*BLOCK); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i*BLOCK); ctx.lineTo(canvas.width/BLOCK|0,i*BLOCK); ctx.stroke();
   }
 
+  // board
   board.forEach((row, y) => {
     row.forEach((val, x) => {
       if (val) {
-        const px = x*BLOCK;
-        const py = y*BLOCK;
+        const px = x * BLOCK;
+        const py = y * BLOCK;
         ctx.fillStyle = COLORS[val];
         ctx.fillRect(px, py, BLOCK, BLOCK);
-        const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
-        grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-        grad.addColorStop(0.35, 'rgba(255,255,255,0.25)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.45)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(px, py, BLOCK, BLOCK);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.fillRect(px, py, BLOCK, BLOCK/2);
         ctx.strokeStyle = '#111';
-        ctx.lineWidth = 2;
         ctx.strokeRect(px, py, BLOCK, BLOCK);
       }
     });
   });
 
+  // current piece
   if (currentPiece) {
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = COLORS[currentPiece.type];
+    let ghostY = currentPiece.y;
+    while (!collidesAt(currentPiece.x, ghostY + 1)) ghostY++;
+    currentPiece.shape.forEach((row, dy) => {
+      row.forEach((val, dx) => {
+        if (val) {
+          const px = (currentPiece.x + dx) * BLOCK;
+          const py = (ghostY + dy) * BLOCK;
+          if (ghostY + dy >= 0) ctx.fillRect(px, py, BLOCK, BLOCK);
+        }
+      });
+    });
+    ctx.globalAlpha = 1;
+
     ctx.fillStyle = COLORS[currentPiece.type];
     currentPiece.shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
         if (val) {
-          const px = (currentPiece.x + dx)*BLOCK;
-          const py = (currentPiece.y + dy)*BLOCK;
+          const px = (currentPiece.x + dx) * BLOCK;
+          const py = (currentPiece.y + dy) * BLOCK;
           if (currentPiece.y + dy >= 0) {
             ctx.fillRect(px, py, BLOCK, BLOCK);
-            const grad = ctx.createLinearGradient(px, py, px+BLOCK, py+BLOCK);
-            grad.addColorStop(0, 'rgba(255,255,255,0.6)');
-            grad.addColorStop(0.35, 'rgba(255,255,255,0.25)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.45)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(px, py, BLOCK, BLOCK);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(px, py, BLOCK, BLOCK/2);
             ctx.strokeStyle = '#111';
-            ctx.lineWidth = 2;
             ctx.strokeRect(px, py, BLOCK, BLOCK);
           }
         }
@@ -312,24 +381,43 @@ function draw() {
     });
   }
 
+  // next
   nextCtx.fillStyle = '#001122';
   nextCtx.fillRect(0,0,90,90);
   if (nextPieceType) {
     const shape = SHAPES[nextPieceType];
     const col = COLORS[nextPieceType];
     nextCtx.fillStyle = col;
+    const offX = shape[0].length === 4 ? 5 : 15; // center better
+    const offY = shape.length === 1 ? 35 : 15;
     shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
-        if (val) nextCtx.fillRect((dx+1)*20, (dy+1)*20, 18, 18);
+        if (val) nextCtx.fillRect(offX + dx*18, offY + dy*18, 16, 16);
       });
     });
   }
 }
 
+function collidesAt(tx, ty) {
+  const s = currentPiece.shape;
+  for (let dy = 0; dy < s.length; dy++) {
+    for (let dx = 0; dx < s[dy].length; dx++) {
+      if (s[dy][dx]) {
+        const nx = tx + dx;
+        const ny = ty + dy;
+        if (nx < 0 || nx >= 10 || ny >= 20) return true;
+        if (ny >= 0 && board[ny][nx]) return true;
+      }
+    }
+  }
+  return false;
+}
+
 resize();
 spawnPiece();
 
-// Start flow
+// ─── Event listeners ─────────────────────────────────────
+
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
@@ -344,6 +432,7 @@ document.getElementById('start-game-btn').addEventListener('touchstart', e => {
 
 document.getElementById('start-game-btn').addEventListener('click', e => {
   e.preventDefault();
+  // same as touch
   document.getElementById('start-feedback').textContent = 'START pressed (click) → loading...';
   document.getElementById('start-feedback').style.color = '#ff0';
   document.getElementById('menu').classList.remove('visible');
@@ -362,7 +451,7 @@ function begin() {
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-  bgMusic.play().catch(() => {});
+  // bgMusic.play().catch(() => {}); // add real src if wanted
 }
 
 document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
@@ -372,9 +461,33 @@ document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.p
 // Controls
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
-document.getElementById('soft-drop').addEventListener('touchstart', e => { e.preventDefault(); softDrop = true; });
-document.getElementById('soft-drop').addEventListener('touchend', e => { e.preventDefault(); softDrop = false; });
-document.getElementById('rotate-cw').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) rotate(); });
+
+let softDropTimer = null;
+document.getElementById('soft-drop').addEventListener('touchstart', e => {
+  e.preventDefault();
+  softDrop = true;
+  hardDropTriggered = false;
+  dropStartY = currentPiece.y;
+});
+document.getElementById('soft-drop').addEventListener('touchend', e => {
+  e.preventDefault();
+  softDrop = false;
+  if (Date.now() - (softDropTimer || 0) < 180) { // short tap = soft, long = hard
+    // nothing
+  } else {
+    hardDrop();
+  }
+});
+
+document.getElementById('rotate-cw').addEventListener('touchstart', e => { 
+  e.preventDefault(); 
+  if (!paused && currentPiece) rotate(true); 
+});
+document.getElementById('rotate-cw').addEventListener('dblclick', e => { // crude ccw via double tap
+  e.preventDefault();
+  if (!paused && currentPiece) rotate(false);
+});
+
 document.getElementById('pause-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   paused = !paused;
@@ -388,8 +501,21 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
   document.getElementById('pause-overlay').classList.add('hidden');
   bgMusic.play().catch(() => {});
 });
+
+// restart (you'll need to reset variables)
+document.getElementById('restart-btn').addEventListener('touchstart', e => {
+  e.preventDefault();
+  board = Array(20).fill().map(() => Array(10).fill(0));
+  score = 0;
+  level = 1;
+  gameOver = false;
+  paused = false;
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('score').textContent = 0;
+  document.getElementById('level').textContent = 1;
+  spawnPiece();
+  draw();
+});
 </script>
 </body>
-</html>
-
-This isthe current code I'm on
+                                      </html>
