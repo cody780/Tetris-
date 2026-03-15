@@ -15,22 +15,31 @@
     #start-feedback { font-size:1.4rem; margin-top:40px; color:#0f0; text-align:center; }
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { flex:1; position:relative; background:#000; display:flex; justify-content:center; align-items:center; pointer-events:none; }
-    #canvas { width:62vw; max-width:380px; height:calc(62vw * 2.1); max-height:65vh; background:#000; border:3px solid #444; border-bottom:14px solid #555; image-rendering:pixelated; }
-    #next-preview { position:absolute; right:12px; top:12px; width:90px; height:90px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; }
-    #pause-btn { position:absolute; top:12px; left:12px; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
-    #controller { height:100vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; }
+    #canvas { 
+      width: 94vw; 
+      max-width: 480px; 
+      height: calc(94vw * 2); 
+      max-height: 80vh; 
+      background:#000; 
+      border:3px solid #444; 
+      border-bottom:14px solid #555; 
+      image-rendering:pixelated; 
+    }
+    #next-preview { position:absolute; right:4vw; top:4vw; width:80px; height:80px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; z-index:5; }
+    #pause-btn { position:absolute; top:4vw; left:4vw; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
+    #controller { height: auto; min-height: 40vh; background:#0a0a0a; border-top:4px solid #333; display:flex; justify-content:center; align-items:center; padding: 10px 0; }
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
       gap:9px;
-      width:clamp(340px,75vw,440px); 
-      height:clamp(340px,75vw,440px); 
+      width:clamp(320px, 85vw, 440px); 
+      height:clamp(320px, 85vw, 440px); 
       place-items:center; 
     }
-    .btn { width:clamp(110px,24vw,150px); height:clamp(110px,24vw,150px); background:#3a3a3a; border:6px solid #888; border-radius:50%; color:white; font-size:clamp(3rem,9vw,4.5rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
+    .btn { width:clamp(100px, 26vw, 140px); height:clamp(100px, 26vw, 140px); background:#3a3a3a; border:6px solid #888; border-radius:50%; color:white; font-size:clamp(2.8rem,8vw,4rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
     .btn:active { background:#666; transform:scale(0.92); }
-    #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; }
+    #hud { position:absolute; top:4vw; left:70px; right:4vw; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; pointer-events:none; }
     #score-board { animation:scoreflash 1.8s infinite alternate; }
     @keyframes scoreflash { from { opacity:0.75; text-shadow:0 0 12px #0ff8; } to { opacity:1; text-shadow:0 0 24px #0ff; } }
     #game-over h2 { color:#ff4444; text-shadow:0 0 30px #f00; }
@@ -63,7 +72,7 @@
     </div>
     <div id="pause-btn">P</div>
     <canvas id="canvas"></canvas>
-    <div id="next-preview"><canvas id="next-canvas" width="90" height="90"></canvas></div>
+    <div id="next-preview"><canvas id="next-canvas" width="80" height="80"></canvas></div>
   </div>
 
   <div id="controller">
@@ -133,16 +142,26 @@ const SHAPES = [
 
 function resize() {
   const dpr = window.devicePixelRatio || 1;
-  const w = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.55);
-  BLOCK = Math.floor(w / 10);
-
+  
+  // Set canvas CSS size first
+  const displayWidth = canvas.clientWidth;
+  BLOCK = Math.floor(displayWidth / 10);
+  
+  // Pixel-perfect canvas backing
   canvas.width = 10 * BLOCK * dpr;
   canvas.height = 20 * BLOCK * dpr;
   ctx.scale(dpr, dpr);
+
+  // Next preview also scales a bit
+  nextCtx.canvas.width = 80 * dpr;
+  nextCtx.canvas.height = 80 * dpr;
+  nextCtx.scale(dpr, dpr);
+
   draw();
 }
 
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 
 function spawnPiece() {
   const type = nextPieceType || Math.floor(Math.random()*7) + 1;
@@ -236,16 +255,14 @@ function rotate(cw = true) {
   const w = oldShape[0].length;
   const h = oldShape.length;
 
-  let newShape;
+  let newShape = Array(w).fill().map(() => Array(h).fill(0));
   if (cw) {
-    newShape = Array(w).fill().map(() => Array(h).fill(0));
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         newShape[x][h - 1 - y] = oldShape[y][x];
       }
     }
   } else {
-    newShape = Array(w).fill().map(() => Array(h).fill(0));
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         newShape[w - 1 - x][y] = oldShape[y][x];
@@ -297,17 +314,17 @@ function draw() {
   ctx.fillStyle = '#000011';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // grid
+  // thin grid
   ctx.strokeStyle = '#222';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 10; i++) {
-    ctx.beginPath(); ctx.moveTo(i*BLOCK,0); ctx.lineTo(i*BLOCK,canvas.height/BLOCK|0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i*BLOCK, 0); ctx.lineTo(i*BLOCK, 20*BLOCK); ctx.stroke();
   }
   for (let i = 0; i <= 20; i++) {
-    ctx.beginPath(); ctx.moveTo(0,i*BLOCK); ctx.lineTo(canvas.width/BLOCK|0,i*BLOCK); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i*BLOCK); ctx.lineTo(10*BLOCK, i*BLOCK); ctx.stroke();
   }
 
-  // board
+  // board pieces
   board.forEach((row, y) => {
     row.forEach((val, x) => {
       if (val) {
@@ -318,6 +335,7 @@ function draw() {
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
         ctx.fillRect(px, py, BLOCK, BLOCK/2);
         ctx.strokeStyle = '#111';
+        ctx.lineWidth = 2;
         ctx.strokeRect(px, py, BLOCK, BLOCK);
       }
     });
@@ -336,6 +354,7 @@ function draw() {
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillRect(px, py, BLOCK, BLOCK/2);
             ctx.strokeStyle = '#111';
+            ctx.lineWidth = 2;
             ctx.strokeRect(px, py, BLOCK, BLOCK);
           }
         }
@@ -343,18 +362,17 @@ function draw() {
     });
   }
 
-  // next piece preview
+  // next preview
   nextCtx.fillStyle = '#001122';
-  nextCtx.fillRect(0,0,90,90);
+  nextCtx.fillRect(0,0,80,80);
   if (nextPieceType) {
     const shape = SHAPES[nextPieceType];
-    const col = COLORS[nextPieceType];
-    nextCtx.fillStyle = col;
-    const offX = shape[0].length === 4 ? 5 : 15;
-    const offY = shape.length === 1 ? 35 : 15;
+    nextCtx.fillStyle = COLORS[nextPieceType];
+    const offX = shape[0].length === 4 ? 4 : 12;
+    const offY = shape.length === 1 ? 30 : 12;
     shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
-        if (val) nextCtx.fillRect(offX + dx*18, offY + dy*18, 16, 16);
+        if (val) nextCtx.fillRect(offX + dx*16, offY + dy*16, 14, 14);
       });
     });
   }
@@ -397,7 +415,6 @@ function begin() {
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-  // bgMusic.play().catch(() => {}); // uncomment when you add a real src
 }
 
 document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
