@@ -16,7 +16,7 @@
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { 
       flex: 0 1 auto; 
-      max-height: 58vh;           /* ← key: cap vertical space for board */
+      max-height: 58vh;
       position:relative; 
       background:#000; 
       display:flex; 
@@ -27,7 +27,7 @@
     #canvas { 
       width: 94vw; 
       max-width: 480px; 
-      height: calc(94vw * 1.92);   /* slightly shorter than 2:1 to leave room */
+      height: calc(94vw * 1.92); 
       max-height: 56vh; 
       background:#000; 
       border:3px solid #444; 
@@ -38,25 +38,38 @@
     #pause-btn { position:absolute; top:4vw; left:4vw; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
       flex: 1 0 auto; 
-      min-height: 38vh;           /* ← ensures controls have enough space */
+      min-height: 34vh;           /* reduced to help fit better */
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
       justify-content:center; 
       align-items:center; 
-      padding: 10px 0; 
+      padding: 8px 0; 
       box-sizing: border-box;
     }
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
-      gap:9px;
-      width:clamp(320px, 85vw, 440px); 
-      height:clamp(320px, 85vw, 440px); 
+      gap:7px;                    /* tighter gap */
+      width:clamp(300px, 82vw, 420px); 
+      height:clamp(300px, 82vw, 420px); 
       place-items:center; 
     }
-    .btn { width:clamp(100px, 26vw, 140px); height:clamp(100px, 26vw, 140px); background:#3a3a3a; border:6px solid #888; border-radius:50%; color:white; font-size:clamp(2.8rem,8vw,4rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
+    .btn { 
+      width:clamp(90px, 23vw, 130px); 
+      height:clamp(90px, 23vw, 130px); 
+      background:#3a3a3a; 
+      border:5px solid #888; 
+      border-radius:50%; 
+      color:white; 
+      font-size:clamp(2.6rem,7.5vw,3.8rem); 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      box-shadow:0 5px 15px #0008; 
+      touch-action:manipulation; 
+    }
     .btn:active { background:#666; transform:scale(0.92); }
     #hud { position:absolute; top:4vw; left:70px; right:4vw; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; pointer-events:none; }
     #score-board { animation:scoreflash 1.8s infinite alternate; }
@@ -145,6 +158,11 @@ let softDrop = false;
 let score = 0;
 let level = 1;
 let gameOver = false;
+
+// For hold left/right repeat
+let moveInterval = null;
+let moveDirection = 0; // -1 left, 1 right
+let moveDelayTimer = null;
 
 const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
@@ -264,6 +282,31 @@ function move(dx) {
     moveSfx.currentTime = 0;
     moveSfx.play().catch(() => {});
   }
+}
+
+function startMove(direction) {
+  if (moveInterval) clearInterval(moveInterval);
+  if (moveDelayTimer) clearTimeout(moveDelayTimer);
+
+  moveDirection = direction;
+
+  // Immediate first move
+  if (!paused && currentPiece) move(direction);
+
+  // Delay then repeat
+  moveDelayTimer = setTimeout(() => {
+    moveInterval = setInterval(() => {
+      if (!paused && currentPiece) move(moveDirection);
+    }, 100); // repeat every 100ms after delay
+  }, 300); // initial delay 300ms
+}
+
+function stopMove() {
+  if (moveInterval) clearInterval(moveInterval);
+  if (moveDelayTimer) clearTimeout(moveDelayTimer);
+  moveInterval = null;
+  moveDelayTimer = null;
+  moveDirection = 0;
 }
 
 function rotate(cw = true) {
@@ -393,7 +436,8 @@ function draw() {
 resize();
 spawnPiece();
 
-// Event listeners remain the same as before...
+// ─── Event listeners ─────────────────────────────────────
+
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
@@ -433,8 +477,23 @@ document.getElementById('medium-btn').addEventListener('touchstart', e => { e.pr
 document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
 
 // Controls
-document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
-document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
+document.getElementById('move-left').addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!paused && currentPiece) startMove(-1);
+});
+document.getElementById('move-left').addEventListener('touchend', e => {
+  e.preventDefault();
+  stopMove();
+});
+
+document.getElementById('move-right').addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!paused && currentPiece) startMove(1);
+});
+document.getElementById('move-right').addEventListener('touchend', e => {
+  e.preventDefault();
+  stopMove();
+});
 
 document.getElementById('soft-drop').addEventListener('touchstart', e => {
   e.preventDefault();
@@ -483,4 +542,4 @@ document.getElementById('restart-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-</html>
+  </html>
