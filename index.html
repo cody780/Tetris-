@@ -16,7 +16,7 @@
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { 
       flex: 0 1 auto; 
-      max-height: 68vh; 
+      max-height: 70vh; 
       position:relative; 
       background:#000; 
       display:flex; 
@@ -28,7 +28,7 @@
       width: 94vw; 
       max-width: 480px; 
       height: calc(94vw * 1.85); 
-      max-height: 66vh; 
+      max-height: 68vh; 
       background:#000; 
       border:3px solid #444; 
       border-bottom:14px solid #555; 
@@ -37,7 +37,7 @@
     #next-preview { position:absolute; right:3vw; top:3vw; width:70px; height:70px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; z-index:5; }
     #pause-btn { position:absolute; top:3vw; left:3vw; width:48px; height:48px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.8rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
-      flex: 0 0 24vh; 
+      flex: 0 0 22vh; 
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
@@ -45,7 +45,7 @@
       align-items:center; 
       padding: 6px; 
       box-sizing: border-box;
-      margin-top: -20px;               /* Raised the whole D-pad up */
+      margin-top: -32px;                /* Raised higher again */
     }
     .controls { 
       display: flex; 
@@ -190,13 +190,13 @@ window.addEventListener('load', function() {
 
   const SHAPES = [
     null,
-    [[1,1,1,1]],
-    [[1,1],[1,1]],
-    [[0,1,0],[1,1,1]],
-    [[0,1,1],[1,1,0]],
-    [[1,1,0],[0,1,1]],
-    [[1,0,0],[1,1,1]],
-    [[0,0,1],[1,1,1]]
+    [[1,1,1,1]], // I (cyan)
+    [[1,1],[1,1]], // O
+    [[0,1,0],[1,1,1]], // T
+    [[0,1,1],[1,1,0]], // S
+    [[1,1,0],[0,1,1]], // Z
+    [[1,0,0],[1,1,1]], // J
+    [[0,0,1],[1,1,1]]  // L
   ];
 
   function resize() {
@@ -331,29 +331,44 @@ window.addEventListener('load', function() {
     let newShape = Array(w).fill().map(() => Array(h).fill(0));
 
     if (cw) {
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          newShape[x][h - 1 - y] = oldShape[y][x];
-        }
-      }
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) newShape[x][h - 1 - y] = oldShape[y][x];
     } else {
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          newShape[w - 1 - x][y] = oldShape[y][x];
-        }
-      }
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) newShape[w - 1 - x][y] = oldShape[y][x];
     }
 
     currentPiece.shape = newShape;
 
-    // Wall kick tests (basic SRS)
-    const kicks = [
-      {x: 0,  y: 0},
-      {x: cw ? -1 : 1, y: 0},
-      {x: cw ? -1 : 1, y: -1},
-      {x: 0,  y: -2},
-      {x: cw ? -1 : 1, y: -2}
-    ];
+    // Kick tables: normal pieces vs I-piece
+    let kicks;
+    if (currentPiece.type === 1) { // I-piece (cyan bar)
+      kicks = cw ? [
+        {x: 0, y: 0},
+        {x: -2, y: 0},
+        {x: 1, y: 0},
+        {x: -2, y: 1},
+        {x: 1, y: -2}
+      ] : [
+        {x: 0, y: 0},
+        {x: 2, y: 0},
+        {x: -1, y: 0},
+        {x: 2, y: -1},
+        {x: -1, y: 2}
+      ];
+    } else { // other pieces
+      kicks = cw ? [
+        {x: 0, y: 0},
+        {x: -1, y: 0},
+        {x: -1, y: -1},
+        {x: 0, y: -2},
+        {x: -1, y: -2}
+      ] : [
+        {x: 0, y: 0},
+        {x: 1, y: 0},
+        {x: 1, y: -1},
+        {x: 0, y: -2},
+        {x: 1, y: -2}
+      ];
+    }
 
     for (const kick of kicks) {
       currentPiece.x = oldX + kick.x;
