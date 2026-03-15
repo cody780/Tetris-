@@ -16,19 +16,19 @@
     #game { height:100vh; display:flex; flex-direction:column; }
     #play-area { 
       flex: 0 1 auto; 
-      max-height: 58vh;
+      max-height: 60vh;           /* gave board a tiny bit more room */
       position:relative; 
       background:#000; 
       display:flex; 
       justify-content:center; 
       align-items:center; 
-      padding: 8px 0; 
+      padding: 6px 0; 
     }
     #canvas { 
       width: 94vw; 
       max-width: 480px; 
-      height: calc(94vw * 1.88);   /* ← tweaked slightly taller feel, less squish */
-      max-height: 56vh; 
+      height: calc(94vw * 1.88); 
+      max-height: 58vh; 
       background:#000; 
       border:3px solid #444; 
       border-bottom:14px solid #555; 
@@ -38,32 +38,32 @@
     #pause-btn { position:absolute; top:4vw; left:4vw; width:50px; height:50px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.9rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
       flex: 1 0 auto; 
-      min-height: 34vh; 
+      min-height: 32vh; 
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
       justify-content:center; 
       align-items:center; 
-      padding: 6px 0;             /* ← tiny reduction */
+      padding: 6px 0; 
       box-sizing: border-box;
     }
     .dpad { 
       display:grid; 
       grid-template-columns:1fr 1fr 1fr; 
       grid-template-rows:1fr 1fr 1fr; 
-      gap:9px;                    /* ← back to 9px for better spacing */
-      width:clamp(300px, 82vw, 420px); 
-      height:clamp(300px, 82vw, 420px); 
+      gap:6px;                    /* tighter – buttons closer together */
+      width:clamp(280px, 78vw, 400px); 
+      height:clamp(280px, 78vw, 400px); 
       place-items:center; 
     }
     .btn { 
-      width:clamp(90px, 23vw, 130px); 
-      height:clamp(90px, 23vw, 130px); 
+      width:clamp(88px, 22vw, 125px); 
+      height:clamp(88px, 22vw, 125px); 
       background:#3a3a3a; 
       border:5px solid #888; 
       border-radius:50%; 
       color:white; 
-      font-size:clamp(2.6rem,7.5vw,3.8rem); 
+      font-size:clamp(2.5rem,7vw,3.6rem); 
       display:flex; 
       align-items:center; 
       justify-content:center; 
@@ -293,12 +293,12 @@ function startMove(direction) {
   // Immediate first move
   if (!paused && currentPiece) move(direction);
 
-  // Delay then repeat
+  // Faster repeat
   moveDelayTimer = setTimeout(() => {
     moveInterval = setInterval(() => {
       if (!paused && currentPiece) move(moveDirection);
-    }, 100);
-  }, 300);
+    }, 80);   // ← faster repeat: 80ms
+  }, 280);    // ← slightly faster initial delay
 }
 
 function stopMove() {
@@ -436,7 +436,8 @@ function draw() {
 resize();
 spawnPiece();
 
-// Event listeners (same as before)
+// ─── Event listeners ─────────────────────────────────────
+
 document.getElementById('start-game-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   document.getElementById('start-feedback').textContent = 'START pressed → loading difficulty...';
@@ -541,4 +542,4 @@ document.getElementById('restart-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-  </html>
+</html>
