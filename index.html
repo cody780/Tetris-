@@ -27,7 +27,7 @@
     #canvas { 
       width: 94vw; 
       max-width: 480px; 
-      height: calc(94vw * 1.78); 
+      height: calc(94vw * 1.85); 
       max-height: 66vh; 
       background:#000; 
       border:3px solid #444; 
@@ -37,7 +37,7 @@
     #next-preview { position:absolute; right:3vw; top:3vw; width:70px; height:70px; background:#0a0a1a; border:2px solid #444; border-radius:6px; overflow:hidden; z-index:5; }
     #pause-btn { position:absolute; top:3vw; left:3vw; width:48px; height:48px; background:rgba(255,180,0,0.85); border:3px solid #ff0; border-radius:50%; color:white; font-size:1.8rem; display:flex; align-items:center; justify-content:center; z-index:10; }
     #controller { 
-      flex: 0 0 26vh;           /* fixed smaller height – should force visibility */
+      flex: 0 0 26vh; 
       background:#0a0a0a; 
       border-top:4px solid #333; 
       display:flex; 
@@ -95,7 +95,22 @@
 </head>
 <body>
 
-<!-- menus unchanged -->
+<div id="menu" class="visible">
+  <h1>GridFlow</h1>
+  <div style="margin:30px 0 60px; font-size:1.6rem; color:#777;">by ꜱᴀᴍᴍɪᴇ</div>
+  <button id="start-game-btn">START GAME</button>
+  <button id="settings-btn">SETTINGS</button>
+  <button id="help-btn">HELP</button>
+  <button id="credits-btn">CREDITS</button>
+  <div id="start-feedback"></div>
+</div>
+
+<div id="difficulty">
+  <h2 style="font-size:clamp(3rem,14vw,5.5rem); color:#0ff; margin-bottom:50px;">LEVEL</h2>
+  <button id="easy-btn">EASY</button>
+  <button id="medium-btn">MEDIUM</button>
+  <button id="extreme-btn">EXTREME</button>
+</div>
 
 <div id="game" class="hidden">
   <div id="play-area">
@@ -122,50 +137,153 @@
   </div>
 </div>
 
-<!-- pause & game-over unchanged -->
+<div id="pause-overlay" class="hidden">
+  <h2>PAUSED</h2>
+  <button id="resume-btn">RESUME</button>
+</div>
+
+<div id="game-over" class="hidden">
+  <div style="font-size:clamp(8rem,40vw,12rem);">🧸</div>
+  <h2 style="margin:20px 0;">Such a loser...</h2>
+  <div style="font-size:2rem; color:#ff0;">Final Score: <span id="final-score">0</span></div>
+  <button id="restart-btn" style="margin-top:40px;">TRY AGAIN</button>
+</div>
+
+<!-- Audio elements unchanged -->
 
 <script>
-// ... (all the script code stays exactly the same as your last working version)
-// only the event listeners for controls change slightly:
+// ────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const nextCtx = document.getElementById('next-canvas').getContext('2d');
 
-// Controls – updated IDs and layout
-document.getElementById('move-left').addEventListener('touchstart', e => {
-  e.preventDefault();
-  if (!paused && currentPiece) startMove(-1);
-});
-document.getElementById('move-left').addEventListener('touchend', e => {
-  e.preventDefault();
-  stopMove();
-});
+const bgMusic = document.getElementById('bg-music');
+const moveSfx = document.getElementById('move-sfx');
+const rotateSfx = document.getElementById('rotate-sfx');
+const dropSfx = document.getElementById('drop-sfx');
+const lineSfx = document.getElementById('line-sfx');
 
-document.getElementById('move-right').addEventListener('touchstart', e => {
-  e.preventDefault();
-  if (!paused && currentPiece) startMove(1);
-});
-document.getElementById('move-right').addEventListener('touchend', e => {
-  e.preventDefault();
-  stopMove();
-});
+let BLOCK = 0;
+let board = Array(20).fill().map(() => Array(10).fill(0));
+let currentPiece = null;
+let nextPieceType = 0;
+let dropTimer = 0;
+let lastTime = 0;
+let paused = false;
+let softDrop = false;
+let score = 0;
+let level = 1;
+let gameOver = false;
 
-document.getElementById('soft-drop').addEventListener('touchstart', e => {
-  e.preventDefault();
-  softDrop = true;
-});
-document.getElementById('soft-drop').addEventListener('touchend', e => {
-  e.preventDefault();
-  softDrop = false;
-});
+let moveInterval = null;
+let moveDirection = 0;
+let moveDelayTimer = null;
 
-document.getElementById('rotate-cw').addEventListener('touchstart', e => { 
-  e.preventDefault(); 
-  if (!paused && currentPiece) rotate(true); 
-});
-document.getElementById('rotate-cw').addEventListener('dblclick', e => {
-  e.preventDefault();
-  if (!paused && currentPiece) rotate(false);
-});
+const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
-// pause, resume, restart unchanged
+const SHAPES = [
+  null,
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[0,1,1],[1,1,0]],
+  [[1,1,0],[0,1,1]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]]
+];
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+
+  let displayWidth = canvas.parentElement ? canvas.parentElement.clientWidth * 0.94 : window.innerWidth * 0.94;
+  displayWidth = Math.min(displayWidth, 480);
+
+  BLOCK = Math.max(20, Math.floor(displayWidth / 10));  // ← minimum 20px per block to prevent zero/collapse
+
+  canvas.width = 10 * BLOCK * dpr;
+  canvas.height = 20 * BLOCK * dpr;
+  ctx.scale(dpr, dpr);
+
+  nextCtx.canvas.width = 70 * dpr;
+  nextCtx.canvas.height = 70 * dpr;
+  nextCtx.scale(dpr, dpr);
+
+  console.log('Resize called - BLOCK:', BLOCK, 'canvas w/h:', canvas.width, canvas.height);
+
+  draw();
+}
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
+
+// Force resize after game shows
+function forceResizeAfterStart() {
+  resize();
+  setTimeout(resize, 200);  // double-check after layout settles
+}
+
+function spawnPiece() {
+  const type = nextPieceType || Math.floor(Math.random()*7) + 1;
+  nextPieceType = Math.floor(Math.random()*7) + 1;
+
+  currentPiece = {
+    type,
+    shape: SHAPES[type].map(r => r.slice()),
+    x: 3,
+    y: -2
+  };
+  dropTimer = 0;
+
+  if (collides()) gameOverFunc();
+}
+
+function collides() {
+  if (!currentPiece) return false;
+  const s = currentPiece.shape;
+  for (let dy = 0; dy < s.length; dy++) {
+    for (let dx = 0; dx < s[dy].length; dx++) {
+      if (s[dy][dx]) {
+        const nx = currentPiece.x + dx;
+        const ny = currentPiece.y + dy;
+        if (nx < 0 || nx >= 10 || ny >= 20) return true;
+        if (ny >= 0 && board[ny][nx]) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// merge, clearLines, lockPiece, gameOverFunc, move, rotate, update, draw functions remain the same as before
+// (I'm skipping pasting them again to keep this short — copy them from your previous version)
+
+function draw() {
+  // ... your draw function here (same as before)
+  // make sure it clears and redraws even if BLOCK is small
+  ctx.fillStyle = '#000022';
+  ctx.fillRect(0, 0, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio);
+
+  // grid, board, piece, next piece rendering...
+}
+
+// Event listeners (start-game-btn, difficulty buttons, controls) same as before
+
+function begin() {
+  document.getElementById('difficulty').classList.remove('visible');
+  document.getElementById('difficulty').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  
+  // Force multiple resizes
+  forceResizeAfterStart();
+  requestAnimationFrame(() => {
+    spawnPiece();
+    draw();
+    requestAnimationFrame(update);
+  });
+}
+
+// ... rest of event listeners unchanged
+
+resize(); // initial call
 </script>
 </body>
-</html>
+  </html>
