@@ -30,7 +30,6 @@
     }
     .btn { width:clamp(110px,24vw,150px); height:clamp(110px,24vw,150px); background:#3a3a3a; border:6px solid #888; border-radius:50%; color:white; font-size:clamp(3rem,9vw,4.5rem); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px #0008; touch-action:manipulation; }
     .btn:active { background:#666; transform:scale(0.92); }
-    #center { grid-area:2 / 2 / 3 / 3; }
     #hud { position:absolute; top:12px; left:80px; right:12px; display:flex; justify-content:space-between; font-size:1.4rem; color:#0ff; text-shadow:0 0 12px #0ff8; z-index:5; }
     #score-board { animation:scoreflash 1.8s infinite alternate; }
     @keyframes scoreflash { from { opacity:0.75; text-shadow:0 0 12px #0ff8; } to { opacity:1; text-shadow:0 0 24px #0ff; } }
@@ -115,11 +114,9 @@ let dropTimer = 0;
 let lastTime = 0;
 let paused = false;
 let softDrop = false;
-let hardDropTriggered = false;
 let score = 0;
 let level = 1;
 let gameOver = false;
-let dropStartY = 0;           // for hard drop bonus
 
 const COLORS = [null, '#00ffff', '#ffff00', '#800080', '#00ff00', '#ff0000', '#0000ff', '#ffa500'];
 
@@ -154,12 +151,10 @@ function spawnPiece() {
   currentPiece = {
     type: type,
     shape: SHAPES[type].map(r => r.slice()),
-    x: 3,               // classic center spawn (columns 3,4,5,6 for flat pieces)
+    x: 3,
     y: -2
   };
-  dropStartY = currentPiece.y;
   dropTimer = 0;
-  hardDropTriggered = false;
 
   if (collides()) gameOverFunc();
 }
@@ -197,7 +192,7 @@ function clearLines() {
       board.splice(y, 1);
       board.unshift(Array(10).fill(0));
       lines++;
-      y++; // re-check same row after shift
+      y++;
     }
   }
   if (lines > 0) {
@@ -206,7 +201,7 @@ function clearLines() {
     document.getElementById('score').textContent = score;
     lineSfx.currentTime = 0;
     lineSfx.play().catch(() => {});
-    level = Math.floor(score / 10000) + 1; // slower level-up
+    level = Math.floor(score / 10000) + 1;
     document.getElementById('level').textContent = level;
   }
 }
@@ -217,13 +212,6 @@ function lockPiece() {
   spawnPiece();
   dropSfx.currentTime = 0;
   dropSfx.play().catch(() => {});
-
-  // hard drop bonus (classic = 2 points per cell dropped)
-  if (hardDropTriggered) {
-    const dist = currentPiece.y - dropStartY;
-    score += dist * 2;
-    document.getElementById('score').textContent = score;
-  }
 }
 
 function gameOverFunc() {
@@ -267,14 +255,13 @@ function rotate(cw = true) {
 
   currentPiece.shape = newShape;
 
-  // simple wall/floor kick: try ±1 x
   if (collides()) {
     currentPiece.x += 1;
     if (collides()) {
       currentPiece.x -= 2;
       if (collides()) {
-        currentPiece.x += 1; // back to original
-        currentPiece.shape = oldShape; // revert
+        currentPiece.x += 1;
+        currentPiece.shape = oldShape;
         return;
       }
     }
@@ -289,7 +276,7 @@ function update(time = 0) {
   const dt = time - lastTime;
   lastTime = time;
 
-  const frameSpeed = Math.max(1, 800 - (level - 1) * 60); // slower ramp-up
+  const frameSpeed = Math.max(1, 800 - (level - 1) * 60);
   const speed = softDrop ? 40 : frameSpeed;
   dropTimer += dt;
 
@@ -304,16 +291,6 @@ function update(time = 0) {
 
   draw();
   requestAnimationFrame(update);
-}
-
-function hardDrop() {
-  if (!currentPiece || paused || gameOver) return;
-  hardDropTriggered = true;
-  while (!collides()) {
-    currentPiece.y++;
-  }
-  currentPiece.y--;
-  lockPiece();
 }
 
 function draw() {
@@ -348,21 +325,6 @@ function draw() {
 
   // current piece
   if (currentPiece) {
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = COLORS[currentPiece.type];
-    let ghostY = currentPiece.y;
-    while (!collidesAt(currentPiece.x, ghostY + 1)) ghostY++;
-    currentPiece.shape.forEach((row, dy) => {
-      row.forEach((val, dx) => {
-        if (val) {
-          const px = (currentPiece.x + dx) * BLOCK;
-          const py = (ghostY + dy) * BLOCK;
-          if (ghostY + dy >= 0) ctx.fillRect(px, py, BLOCK, BLOCK);
-        }
-      });
-    });
-    ctx.globalAlpha = 1;
-
     ctx.fillStyle = COLORS[currentPiece.type];
     currentPiece.shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
@@ -381,14 +343,14 @@ function draw() {
     });
   }
 
-  // next
+  // next piece preview
   nextCtx.fillStyle = '#001122';
   nextCtx.fillRect(0,0,90,90);
   if (nextPieceType) {
     const shape = SHAPES[nextPieceType];
     const col = COLORS[nextPieceType];
     nextCtx.fillStyle = col;
-    const offX = shape[0].length === 4 ? 5 : 15; // center better
+    const offX = shape[0].length === 4 ? 5 : 15;
     const offY = shape.length === 1 ? 35 : 15;
     shape.forEach((row, dy) => {
       row.forEach((val, dx) => {
@@ -396,21 +358,6 @@ function draw() {
       });
     });
   }
-}
-
-function collidesAt(tx, ty) {
-  const s = currentPiece.shape;
-  for (let dy = 0; dy < s.length; dy++) {
-    for (let dx = 0; dx < s[dy].length; dx++) {
-      if (s[dy][dx]) {
-        const nx = tx + dx;
-        const ny = ty + dy;
-        if (nx < 0 || nx >= 10 || ny >= 20) return true;
-        if (ny >= 0 && board[ny][nx]) return true;
-      }
-    }
-  }
-  return false;
 }
 
 resize();
@@ -432,7 +379,6 @@ document.getElementById('start-game-btn').addEventListener('touchstart', e => {
 
 document.getElementById('start-game-btn').addEventListener('click', e => {
   e.preventDefault();
-  // same as touch
   document.getElementById('start-feedback').textContent = 'START pressed (click) → loading...';
   document.getElementById('start-feedback').style.color = '#ff0';
   document.getElementById('menu').classList.remove('visible');
@@ -451,7 +397,7 @@ function begin() {
   spawnPiece();
   draw();
   requestAnimationFrame(update);
-  // bgMusic.play().catch(() => {}); // add real src if wanted
+  // bgMusic.play().catch(() => {}); // uncomment when you add a real src
 }
 
 document.getElementById('easy-btn').addEventListener('touchstart', e => { e.preventDefault(); begin(); });
@@ -462,28 +408,20 @@ document.getElementById('extreme-btn').addEventListener('touchstart', e => { e.p
 document.getElementById('move-left').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(-1); });
 document.getElementById('move-right').addEventListener('touchstart', e => { e.preventDefault(); if (!paused && currentPiece) move(1); });
 
-let softDropTimer = null;
 document.getElementById('soft-drop').addEventListener('touchstart', e => {
   e.preventDefault();
   softDrop = true;
-  hardDropTriggered = false;
-  dropStartY = currentPiece.y;
 });
 document.getElementById('soft-drop').addEventListener('touchend', e => {
   e.preventDefault();
   softDrop = false;
-  if (Date.now() - (softDropTimer || 0) < 180) { // short tap = soft, long = hard
-    // nothing
-  } else {
-    hardDrop();
-  }
 });
 
 document.getElementById('rotate-cw').addEventListener('touchstart', e => { 
   e.preventDefault(); 
   if (!paused && currentPiece) rotate(true); 
 });
-document.getElementById('rotate-cw').addEventListener('dblclick', e => { // crude ccw via double tap
+document.getElementById('rotate-cw').addEventListener('dblclick', e => {
   e.preventDefault();
   if (!paused && currentPiece) rotate(false);
 });
@@ -502,7 +440,6 @@ document.getElementById('resume-btn').addEventListener('touchstart', e => {
   bgMusic.play().catch(() => {});
 });
 
-// restart (you'll need to reset variables)
 document.getElementById('restart-btn').addEventListener('touchstart', e => {
   e.preventDefault();
   board = Array(20).fill().map(() => Array(10).fill(0));
@@ -518,4 +455,4 @@ document.getElementById('restart-btn').addEventListener('touchstart', e => {
 });
 </script>
 </body>
-                                      </html>
+  </html>
